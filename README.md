@@ -2,6 +2,8 @@
 
 **Description**
 
+This is a Timberborn mod.
+
 I love making maps with a natural feel but building up "nature" from the blank canvas provided by Timberborn's map editor can be a daunting task.
 This mod aims to help with that by providing tools to budding and experienced map creators alike.
 The goal is to build those tools based on well-established techniques in procedural generation to allow you to quickly create and iterate on your map design.
@@ -21,6 +23,9 @@ If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurat
 - Mountain Maker
 - Riverbed Runner
 - More?
+
+**Installation**
+Use Steam Workshop or Mod.io
 
 **Known issues**
 
