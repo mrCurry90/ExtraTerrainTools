@@ -24,7 +24,7 @@ If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurat
 - Riverbed Runner
 - More?
 
-** Required Game version **
+**Required Game version**
 
 Update 6
 
