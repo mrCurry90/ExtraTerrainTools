@@ -6,7 +6,7 @@ namespace TerrainTools
 {
     public class TerrainToolsButtons : IBottomBarElementsProvider {
         private static readonly string ToolGroupNameKey = "TerrainTools.ToolGroupButton";
-        private static readonly string ToolGroupSpecIconName = "TerrainToolsIcon";
+        private static readonly string ToolGroupSpecIconName = "TerrainToolsIconCol";//"TerrainToolsIcon";
 
         private readonly ToolButtonFactory _toolButtonFactory;
         private readonly ToolGroupButtonFactory _toolGroupButtonFactory;

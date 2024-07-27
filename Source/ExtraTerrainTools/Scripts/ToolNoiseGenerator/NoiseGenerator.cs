@@ -102,18 +102,28 @@ namespace TerrainTools.NoiseGenerator
 		}
 
 		public void Generate( NoiseParameters parameters, UpdateMode mode = UpdateMode.UpdateExisting )
-		{
+		{	
+			Utils.Log("NoiseGenerator - Generate with mode: {0}", mode);
+			Utils.Log("NoiseGenerator - NoiseParameters: {0}", parameters);
 			if (mode == UpdateMode.ClearExisting)
 			{
+				Utils.Log("NoiseGenerator - Clearing existing objects");
 				_resetService.ClearEntities();			
 			}
+			else 
+			{
+				Utils.Log("NoiseGenerator - Clearing water sources");
+				_resetService.ClearWaterSources();	
+			}
 
+			//_eventBus.Register();
 			Worker.PostJob(this, parameters, mode);
 		}
 
 		private IEnumerator GenerateTerrain(NoiseParameters parameters, UpdateMode mode = UpdateMode.UpdateExisting, Action finalAction = null)
 		{
 			// I'm on it!
+			Utils.Log("NoiseGenerator - Pausing Editor sim");
 			_eventBus.Post(new GeneratorStartedEvent(this));
 			_resetService.PauseEditorSim();
 
@@ -147,8 +157,6 @@ namespace TerrainTools.NoiseGenerator
 			);
 			float rotation = _rng.GetFloat();
 
-			Utils.Log("parameters.Amplitude = {0}", parameters.Amplitude);
-
 			// Loop
 			Easer easer 		= new(parameters.Base, parameters.Crest);
 			Vector2	coord 		= new();
@@ -162,8 +170,7 @@ namespace TerrainTools.NoiseGenerator
 
 			int 	midOffset 	= parameters.Mid - maxHeight / 2,
 					cellsToDo	= CellsPerFrame;
-
-			Utils.Log("Slope params: {0} - {1}",parameters.Base, parameters.Crest);
+			Utils.Log("NoiseGenerator - Generating terrain...");
 			for (int y = 0; y < terrainSize.y; y++)
 			{
 				for (int x = 0; x < terrainSize.x; x++)
@@ -176,17 +183,12 @@ namespace TerrainTools.NoiseGenerator
 					coord.y *= aspect.y;
 					result = FBM(coord + offset, parameters.Period, rotation, parameters.Octaves, parameters.Amplitude, parameters.Frequency);
 
-					Utils.Log("result = {0}", result);
 					rescaled = Mathf.Clamp01((result + 1) / 2f);
-					Utils.Log("rescaled = {0}", rescaled);
 					eased = easer.Value(rescaled);
-					Utils.Log("eased = {0}", eased);
 
 					int z = Mathf.RoundToInt(
 						Mathf.Clamp(terrainSize.z * eased + midOffset, floor, ceiling)
 					);
-
-					Utils.Log("z = {0}", z);
 
 					_terrainService.SetHeight(new Vector2Int(x, y), z);
 				
@@ -203,13 +205,16 @@ namespace TerrainTools.NoiseGenerator
 					}
 				}
 			}
-
+			Utils.Log("NoiseGenerator - Terrain complete.");
+			
 			if( mode == UpdateMode.UpdateExisting)
 			{
+				Utils.Log("NoiseGenerator - Updating entities");
 				_resetService.UpdateEntities();
 			}
 
 			// I'm done!
+			Utils.Log("NoiseGenerator - Unpausing Editor sim");
 			_resetService.UnpauseEditorSim();
 			_eventBus.Post( new GeneratorFinishedEvent(this) );
 

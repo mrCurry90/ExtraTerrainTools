@@ -55,8 +55,8 @@ namespace TerrainTools.NoiseGenerator
         private readonly static string idleText = "--- Idle ---";
         private readonly static string loadingText = "--- Generating: {0}% ---";
         private readonly static string hintText = "<i>Click <b>Generate</b> to update the terrain.</i>";
-        private readonly static string updateWarning = "<i>Natural overhangs will be removed. This action cannot be undone. </i>";
-        private readonly static string clearWarning = "<color=#FFA500><i>All objects will be removed. This action cannot be undone.</i></color>";
+        private readonly static string updateWarning = "<i><color=#FFA500>All water sources</color> will be removed. This action cannot be undone. </i>";
+        private readonly static string clearWarning = "<i><color=#FFA500>All objects</color> will be removed. This action cannot be undone.</i>";
         
         public NoiseGeneratorToolPanel( TerrainToolPanelFactory toolPanelFactory, EventBus eventBus, NoiseGeneratorTool noiseGeneratorTool, BeaverNameService nameService, IAssetLoader assetLoader ) 
         : base(eventBus, typeof(NoiseGeneratorTool))

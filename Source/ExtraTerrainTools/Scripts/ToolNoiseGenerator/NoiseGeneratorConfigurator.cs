@@ -6,7 +6,6 @@ namespace TerrainTools.NoiseGenerator
 	[Context("MapEditor")]
 	public class NoiseGeneratorConfigurator : IConfigurator {
 		public void Configure(IContainerDefinition containerDefinition) {
-			// Tool bindings
 			containerDefinition.Bind<NoiseGenerator>().AsSingleton();
 			containerDefinition.Bind<NoiseGeneratorTool>().AsSingleton();
 			containerDefinition.Bind<NoiseGeneratorToolPanel>().AsSingleton();

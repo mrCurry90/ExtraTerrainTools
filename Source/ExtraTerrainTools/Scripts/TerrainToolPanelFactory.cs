@@ -47,9 +47,9 @@ namespace TerrainTools
 
                 return child;
             }
-            catch (System.IndexOutOfRangeException)
+            catch (IndexOutOfRangeException)
             {
-                throw new System.ArgumentOutOfRangeException("indexPath", "Invalid child index at position " + i);
+                throw new ArgumentOutOfRangeException("indexPath", "Invalid child index at position " + i);
             }
         }
         private VisualElement LoadChild(string assetPath, string childName)

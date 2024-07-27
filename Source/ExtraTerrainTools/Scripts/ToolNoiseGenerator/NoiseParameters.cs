@@ -72,5 +72,37 @@ namespace TerrainTools.NoiseGenerator
             Base        = baseCurve;
             Crest       = crestCurve;
         }
+
+        public override string ToString()
+        {
+            return string.Format(
+                "Seed={0}, Oct={1}, Amp={2}, Freq={3}, Period={4}, Floor={5}, Mid={6}, Ceiling={7}, Base={8}, Crest={9}",
+                Seed,
+                Octaves,
+                Amplitude,
+                Frequency,
+                Period,
+                Floor,
+                Mid,
+                Ceiling,
+                Base,
+                Crest
+            );
+        }
+        public string[] ToStrings()
+        {
+            return new string[] {
+                "Seed=" + Seed,
+				"Oct=" + Octaves,
+				"Amp=" + Amplitude,
+				"Freq=" + Frequency,
+				"Period=" + Period,
+				"Floor=" + Floor,
+				"Mid=" + Mid,
+				"Ceiling=" + Ceiling,
+				"Base=" + Base,
+				"Crest=" + Crest
+            };
+        }
     }
 }
