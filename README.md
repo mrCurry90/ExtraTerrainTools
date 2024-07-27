@@ -12,9 +12,9 @@ If there are any specific creative tools you would like see in the editor then l
 @Modders: Included in the suite is a simple way to add more tools to the Extra Terrain Tools-toolbar.
 If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurator.cs for the gist of how to set it up.
 
-**Tools in current release**
+**Tools in v0.8** 
 
-- Heightmap Generator - Generate a procedurally generated map with a single click. See the Heightmap Generator Manual for more.
+- Heightmap Generator - Generate a procedurally generated map with a single click. See the [Heightmap Generator Manual](https://docs.google.com/document/d/1Y35eAUWDHY_j4pUGkCSBjHaMf2RxPHbqJ7wJm86qDFs/edit?usp=drive_link) for more details.
 
 **Planned tools**
 
