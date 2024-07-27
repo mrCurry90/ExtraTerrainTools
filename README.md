@@ -24,7 +24,12 @@ If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurat
 - Riverbed Runner
 - More?
 
+** Required Game version **
+
+Update 6
+
 **Installation**
+
 Use Steam Workshop or Mod.io
 
 **Known issues**
