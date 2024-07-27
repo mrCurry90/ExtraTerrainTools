@@ -9,7 +9,7 @@ This mod aims to help with that by providing tools to budding and experienced ma
 The goal is to build those tools based on well-established techniques in procedural generation to allow you to quickly create and iterate on your map design.
 
 Right now the "suite" is kinda small with just one finished tool, but I have a few ideas in the pipe.
-If there are any specific creative tools you would like see in the editor then leave a comment or start an Request-issue on GitHub.
+If there are any specific creative tools you would like to see then leave a comment or start an Request-issue on GitHub.
 
 @Modders: Included in the suite is a simple way to add more tools to the Extra Terrain Tools-toolbar.
 If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurator.cs for the gist of how to set it up.
