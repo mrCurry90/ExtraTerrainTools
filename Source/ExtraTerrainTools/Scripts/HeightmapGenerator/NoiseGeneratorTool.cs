@@ -1,7 +1,6 @@
-using System.Threading.Tasks;
 using Timberborn.SingletonSystem;
 using Timberborn.ToolSystem;
-using UnityEngine;
+using TerrainTools.EditorHistory;
 
 namespace TerrainTools.NoiseGenerator
 {
@@ -11,18 +10,20 @@ namespace TerrainTools.NoiseGenerator
         private ToolDescription _toolDescription;
 
         public readonly NoiseGenerator _noiseGenerator;
+        private readonly EditorHistoryService _historyService;
 
-        public NoiseGeneratorTool( NoiseGenerator noiseGenerator )
+        public NoiseGeneratorTool( NoiseGenerator noiseGenerator, EditorHistoryService historyService )
         {
             _noiseGenerator = noiseGenerator;
+            _historyService = historyService;
         }
 
         public void Load()
         {
-           var _builder = new ToolDescription.Builder(_toolTitle);
-           _builder.AddPrioritizedSection("Create a heightmap with a single click");
-           _builder.AddSection("<color=#FFA500>Changes affect the entire map.</color>");
-           _toolDescription = _builder.Build();
+            var _builder = new ToolDescription.Builder(_toolTitle);
+            // _builder.AddPrioritizedSection("Create a heightmap with a single click");
+            _builder.AddPrioritizedSection("<color=#FFA500>Changes affect the entire map.</color>");
+            _toolDescription = _builder.Build();
         }
 
         public override ToolDescription Description()
@@ -37,9 +38,10 @@ namespace TerrainTools.NoiseGenerator
 
         public void GenerateHeightMap(NoiseParameters parameters, bool clear)
         {   
-            var mode = clear ? NoiseGenerator.UpdateMode.ClearExisting : NoiseGenerator.UpdateMode.UpdateExisting;
-            //_noiseGenerator.GenerateAndAwait(parameters, mode);
+            var mode = clear ? NoiseGenerator.UpdateMode.ClearExisting : NoiseGenerator.UpdateMode.UpdateExisting;            
+            _historyService.BatchStart();
             _noiseGenerator.Generate(parameters, mode);
+            _historyService.BatchStop();
         }        
 
         public override void Enter()

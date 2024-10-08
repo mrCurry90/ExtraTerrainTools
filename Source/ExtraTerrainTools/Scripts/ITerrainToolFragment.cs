@@ -21,7 +21,11 @@ namespace TerrainTools
         private Type _toolType;
         protected VisualElement Root { get; private set; }
 
-        public int Order {get; protected set; }
+        private int _baseOrder = 60;
+
+        public int Order { get { return _baseOrder + ToolOrder; } }
+
+        protected int ToolOrder { private get; set; }
         
         private ITerrainToolFragment() {}
         

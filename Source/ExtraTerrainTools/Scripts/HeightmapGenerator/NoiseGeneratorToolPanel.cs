@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using Timberborn.AssetSystem;
 using Timberborn.Beavers;
-using Timberborn.Common;
 using Timberborn.SingletonSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -46,9 +45,9 @@ namespace TerrainTools.NoiseGenerator
         private Slider _crestSelectSlider = null;
         private Image _crestSelectSliderImage = null;
 
-        private Texture2D[] curveTexturesIn;
-        private Texture2D[] curveTexturesOut;
-        private EaserFunction[] curveFunctions;
+        private readonly Texture2D[] curveTexturesIn;
+        private readonly Texture2D[] curveTexturesOut;
+        private readonly EaserFunction[] curveFunctions;
 
         private readonly static string texturePath = "Sprites/NoiseGeneratorToolPanel/38x30";
 
@@ -64,7 +63,7 @@ namespace TerrainTools.NoiseGenerator
             _elementFactory = toolPanelFactory;
             _tool = noiseGeneratorTool;
             _nameService = nameService;
-            base.Order = 60;
+            ToolOrder = 100;
 
             curveFunctions = new EaserFunction[] {
                 EaserFunction.Line,
@@ -193,8 +192,9 @@ namespace TerrainTools.NoiseGenerator
                 MakeParameterSlider(
                     ref _octavesSlider, ref _octavesSliderValue, 
                     "Level of detail:", 
-                    delegate { 
-                        UpdateSliderValue(_octavesSlider, _octavesSliderValue, true); 
+                    delegate {
+                        // UpdateSliderValue(_octavesSlider, _octavesSliderValue, true); 
+                        _octavesSlider.UpdateAsInt(_octavesSliderValue);
                     }, 
                     NoiseGenerator.Limits.Octaves.Min, 
                     NoiseGenerator.Limits.Octaves.Max,
@@ -207,7 +207,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _ampSlider, ref _ampSliderValue, 
                     "Amplitude:", 
                     delegate { 
-                        UpdateSliderValue(_ampSlider, _ampSliderValue, false); 
+                        // UpdateSliderValue(_ampSlider, _ampSliderValue, false);
+                        _ampSlider.Update(_ampSliderValue);
                     }, 
                     NoiseGenerator.Limits.Amplitude.Min, 
                     NoiseGenerator.Limits.Amplitude.Max,
@@ -220,7 +221,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _freqSlider, ref _freqSliderValue, 
                     "Frequency:", 
                     delegate { 
-                        UpdateSliderValue(_freqSlider, _freqSliderValue, false); 
+                        // UpdateSliderValue(_freqSlider, _freqSliderValue, false); 
+                        _freqSlider.Update(_freqSliderValue);
                     }, 
                     NoiseGenerator.Limits.Frequency.Min, 
                     NoiseGenerator.Limits.Frequency.Max,
@@ -255,8 +257,9 @@ namespace TerrainTools.NoiseGenerator
                 MakeParameterSlider(
                     ref _midSlider, ref _midSliderValue, 
                     "Mean height:", 
-                    delegate { 
-                        UpdateSliderValue(_midSlider, _midSliderValue, true); 
+                    delegate {
+                        // UpdateSliderValue(_midSlider, _midSliderValue, true); 
+                        _midSlider.UpdateAsInt(_midSliderValue);
                     }, 
                     NoiseGenerator.Limits.Mid.Min, 
                     NoiseGenerator.Limits.Mid.Max,
@@ -269,7 +272,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _floorSlider, ref _floorSliderValue, 
                     "Min height:", 
                     delegate { 
-                        UpdateSliderValue(_floorSlider, _floorSliderValue, true); 
+                        // UpdateSliderValue(_floorSlider, _floorSliderValue, true); 
+                        _floorSlider.UpdateAsInt(_floorSliderValue);
                     }, 
                     NoiseGenerator.Limits.Floor.Min, 
                     NoiseGenerator.Limits.Floor.Max,
@@ -283,7 +287,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _ceilingSlider, ref _ceilingSliderValue, 
                     "Max height:", 
                     delegate { 
-                        UpdateSliderValue(_ceilingSlider, _ceilingSliderValue, true); 
+                        // UpdateSliderValue(_ceilingSlider, _ceilingSliderValue, true); 
+                        _ceilingSlider.UpdateAsInt(_ceilingSliderValue);
                     }, 
                     NoiseGenerator.Limits.Ceiling.Min, 
                     NoiseGenerator.Limits.Ceiling.Max,
@@ -296,7 +301,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _perXSlider, ref _perXSliderValue,
                     "Period X:",
                     delegate {
-                        UpdateSliderValue(_perXSlider, _perXSliderValue, false);
+                        // UpdateSliderValue(_perXSlider, _perXSliderValue, false);
+                        _perXSlider.Update(_perXSliderValue);
                     },
                     NoiseGenerator.Limits.PeriodX.Min,
                     NoiseGenerator.Limits.PeriodX.Max,
@@ -309,7 +315,8 @@ namespace TerrainTools.NoiseGenerator
                     ref _perYSlider, ref _perYSliderValue, 
                     "Period Y:", 
                     delegate { 
-                        UpdateSliderValue(_perYSlider, _perYSliderValue, false); 
+                        // UpdateSliderValue(_perYSlider, _perYSliderValue, false); 
+                        _perYSlider.Update(_perYSliderValue);
                     }, 
                     NoiseGenerator.Limits.PeriodY.Min, 
                     NoiseGenerator.Limits.PeriodY.Max,
@@ -328,7 +335,7 @@ namespace TerrainTools.NoiseGenerator
                     SetDefaultOptions();
                 })
             );
-            #endregion NoiseGenerator.ToolContent.Footer
+#endregion NoiseGenerator.ToolContent.Footer
 
             UpdateSeedFieldEnabled();
             SetDefaultOptions();
@@ -384,11 +391,11 @@ namespace TerrainTools.NoiseGenerator
         {
             _seedField.value = _nameService.RandomName();
         }
-        private void UpdateSliderValue(Slider slider, Label valueLabel, bool roundToInt = false) {            
-            if(roundToInt && slider.value % 1 > 0) 
-                slider.value = Mathf.Round(slider.value);
-            valueLabel.text = slider.value.ToString();
-        }        
+        // private void UpdateSliderValue(Slider slider, Label valueLabel, bool roundToInt = false) {            
+        //     if(roundToInt && slider.value % 1 > 0) 
+        //         slider.value = Mathf.Round(slider.value);
+        //     valueLabel.text = slider.value.ToString();
+        // }        
         private void UpdateImageSelectorValue(Slider slider, Image image, Texture2D[] array) {            
             if(slider.value % 1 > 0) 
                 slider.value = Mathf.Round(slider.value);
@@ -397,14 +404,23 @@ namespace TerrainTools.NoiseGenerator
         }
         private void UpdateSliders()
         {
-            UpdateSliderValue(_octavesSlider, _octavesSliderValue, true);
-            UpdateSliderValue(_ampSlider, _ampSliderValue, false);
-            UpdateSliderValue(_freqSlider, _freqSliderValue, false);
-            UpdateSliderValue(_perXSlider, _perXSliderValue, false);
-            UpdateSliderValue(_perYSlider, _perYSliderValue, false);
-            UpdateSliderValue(_floorSlider, _floorSliderValue, true);
-            UpdateSliderValue(_midSlider, _midSliderValue, true);
-            UpdateSliderValue(_ceilingSlider, _ceilingSliderValue, true);
+            _octavesSlider.UpdateAsInt(_octavesSliderValue);
+            _ampSlider.Update(_ampSliderValue);
+            _freqSlider.Update(_freqSliderValue);
+            _perXSlider.Update(_perXSliderValue);
+            _perYSlider.Update(_perYSliderValue);
+            _floorSlider.UpdateAsInt(_floorSliderValue);
+            _midSlider.UpdateAsInt(_midSliderValue);
+            _ceilingSlider.UpdateAsInt(_ceilingSliderValue);
+            
+            // UpdateSliderValue(_octavesSlider, _octavesSliderValue, true);
+            // UpdateSliderValue(_ampSlider, _ampSliderValue, false);
+            // UpdateSliderValue(_freqSlider, _freqSliderValue, false);
+            // UpdateSliderValue(_perXSlider, _perXSliderValue, false);
+            // UpdateSliderValue(_perYSlider, _perYSliderValue, false);
+            // UpdateSliderValue(_floorSlider, _floorSliderValue, true);
+            // UpdateSliderValue(_midSlider, _midSliderValue, true);
+            // UpdateSliderValue(_ceilingSlider, _ceilingSliderValue, true);
         }
 
         private void UpdateImageSelectors()

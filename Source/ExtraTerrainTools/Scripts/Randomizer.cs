@@ -14,6 +14,9 @@ namespace TerrainTools
             Seed(seed);
         }
 
+        /// <summary>
+        /// Return random integer in range min (inclusive)  to max (exlusive)
+        /// </summary>
         public int GetInt(int min, int max)
         {          
             return rng.Next(min, max);

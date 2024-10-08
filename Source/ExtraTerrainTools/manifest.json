@@ -1,6 +1,6 @@
 {
   "Name": "Extra Terrain Tools",
-  "Version": "0.8",
+  "Version": "0.9",
   "Id": "Timberborn.Editor.ExtendedTerrainTools",
   "MinimumGameVersion": "0.6.0.0",
   "Description": "Adds extra terrain tools to the Timberborn map editor. Mod by mrCurry.",

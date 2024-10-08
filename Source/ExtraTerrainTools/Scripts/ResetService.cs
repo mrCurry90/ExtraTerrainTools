@@ -11,6 +11,7 @@ using UnityEngine;
 using System;
 using Object = UnityEngine.Object;
 using Timberborn.WaterSourceSystem;
+using Timberborn.BaseComponentSystem;
 
 namespace TerrainTools
 {
@@ -47,7 +48,7 @@ namespace TerrainTools
         public void ClearEntities() {
             foreach (var e in GetEntityList())
             {
-                _entityService.Delete(e);
+                Delete(e);
             }
         }
 
@@ -60,17 +61,10 @@ namespace TerrainTools
             {
                 var entityBlockObject = e.GetComponentFast<BlockObject>();
                 var entityIsWaterSource = e.GetComponentFast<WaterSource>() != null;
-                var enityCanContaminate = e.GetComponentFast<WaterSourceContamination>() != null;
-
-                if(entityIsWaterSource)
-                    Utils.Log(entityBlockObject + " has water source.");
-                if(enityCanContaminate)
-                    Utils.Log(entityBlockObject + " can contaminate.");
-
-                if( entityBlockObject != null && entityIsWaterSource && enityCanContaminate)
+                if( entityBlockObject != null && entityIsWaterSource)
                 {
-                    Utils.Log(entityBlockObject + " is deleted.");
-                    _entityService.Delete(entityBlockObject);
+                    Utils.Log(entityBlockObject + " marked for deletion.");
+                    Delete(entityBlockObject);
                 }
             }
         }
@@ -92,8 +86,8 @@ namespace TerrainTools
                         var c = blockObject.Coordinates;
                         if( !AdjustBlockObjectHeight(blockObject, deltaZ) )
                         {
-                            Utils.Log("Could not adjust {0} at {1} by {2}. Entity deleted.", blockObject, c, deltaZ);
-                            _entityService.Delete(blockObject);
+                            Utils.Log("Could not adjust {0} at {1} by {2}. Entity marked for deletion.", blockObject, c, deltaZ);
+                            Delete(blockObject);
                         }
                     }
                 }
@@ -209,6 +203,21 @@ namespace TerrainTools
         private static bool IncludeNearBlock(Block block, bool upward)
         {
             return upward ? block.IsFoundationBlock : block.Stackable.IsStackable();
+        }
+
+        private void Delete(BaseComponent obj)
+        {
+            var blockObject = obj.GetComponentFast<BlockObject>();
+            var waterSource = obj.GetComponentFast<WaterSource>();
+            var entity = obj.GetComponentFast<EntityComponent>();
+
+            if( waterSource != null)
+                waterSource.DeleteEntity();
+            
+            if( blockObject != null)
+                blockObject.DeleteEntity();        
+
+            _entityService.Delete(entity);
         }
     }
 }

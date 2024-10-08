@@ -1,0 +1,12 @@
+﻿{
+  "Id": "RedoTerrainFast",
+  "GroupId": "MapEditor",
+  "LocKey": "TerrainTools.Keybinding.FastRedo",
+  "Order": 93,
+  "PrimaryInputBindingSpecification": {
+    "Path": "/Keyboard/y",
+    "InputModifiers": {
+      "Value": "Ctrl, Shift"
+    }
+  }
+}

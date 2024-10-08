@@ -1,0 +1,12 @@
+﻿{
+  "Id": "UndoTerrainFast",
+  "GroupId": "MapEditor",
+  "LocKey": "TerrainTools.Keybinding.FastUndo",
+  "Order": 92,
+  "PrimaryInputBindingSpecification": {
+    "Path": "/Keyboard/z",
+    "InputModifiers": {
+      "Value": "Ctrl, Shift"
+    }
+  }
+}

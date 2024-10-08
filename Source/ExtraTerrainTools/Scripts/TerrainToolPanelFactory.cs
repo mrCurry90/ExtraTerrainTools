@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.Tracing;
 using Timberborn.CoreUI;
 using Timberborn.SingletonSystem;
 using UnityEngine;
@@ -8,6 +7,14 @@ namespace TerrainTools
 {
     public class TerrainToolPanelFactory : ILoadableSingleton
     {
+        [Flags]
+        public enum TextFormat
+        {
+            None = 0,
+            Bold = 1,
+            Italic = 2  
+        }
+
         private readonly VisualElementLoader _loader;
         private static readonly string brushShapePath = "MapEditor/ToolPanel/BrushShapePanel";
         private static readonly string brushSizePath = "MapEditor/ToolPanel/BrushSizePanel";
@@ -102,6 +109,19 @@ namespace TerrainTools
             label.text = text;
             return label;
         }
+
+        public Label MakeLabel(string text, TextAnchor alignAnchor, TextFormat format = TextFormat.None)
+        {
+            if(format != TextFormat.None)
+            {
+                if (format.HasFlag( TextFormat.Bold ))    text = $"<b>{text}</b>";
+                if (format.HasFlag( TextFormat.Italic ))  text = $"<i>{text}</i>";
+            }
+
+            var label = MakeLabel(text);
+            label.style.unityTextAlign = alignAnchor;            
+            return label;
+        }
         
         private Button MakeButton( string assetPath, string childName, string text, Action action )
         {
@@ -180,6 +200,8 @@ namespace TerrainTools
             });
 
             return container;
-        }        
+        }
+
+
     }
 }

@@ -11,7 +11,10 @@ namespace TerrainTools.NoiseGenerator
 {
 	public class NoiseGenerator : ILoadableSingleton
 	{
-		public class Worker : MonoBehaviour
+		/// <summary>
+		/// Class for managing GameObject used in Coroutine excecution
+		/// </summary>
+		private class Worker : MonoBehaviour
 		{
 			public static void PostJob(NoiseGenerator generator, NoiseParameters parameters, UpdateMode mode)
 			{
@@ -242,7 +245,7 @@ namespace TerrainTools.NoiseGenerator
 		}  
 
 		// Simple wrapper to convert input from Unity.Mathematics.float2 to Vector2
-		public static float Noise( Vector2 coord, Vector2 period, float rotation ) {
+		public static float Noise( Vector2 coord, Vector2 period, float rotation = 0 ) {
 			return noise.psrnoise( 
 				new float2(coord.x,coord.y), 
 				new float2(period.x,period.y),

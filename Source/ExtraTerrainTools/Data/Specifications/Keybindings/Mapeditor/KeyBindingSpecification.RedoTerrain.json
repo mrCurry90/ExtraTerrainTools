@@ -1,0 +1,12 @@
+﻿{
+  "Id": "RedoTerrain",
+  "GroupId": "MapEditor",
+  "LocKey": "TerrainTools.Keybinding.Redo",
+  "Order": 91,
+  "PrimaryInputBindingSpecification": {
+    "Path": "/Keyboard/y",
+    "InputModifiers": {
+      "Value": "Ctrl"
+    }
+  }
+}

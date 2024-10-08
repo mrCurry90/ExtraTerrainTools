@@ -21,13 +21,14 @@ namespace TerrainTools
         public IEnumerable<BottomBarElement> GetElements()
         {        
             // Create tool group button
-            TerrainToolsToolGroup toolGroup = new TerrainToolsToolGroup( ToolGroupNameKey, ToolGroupSpecIconName );
+            TerrainToolsToolGroup toolGroup = new( ToolGroupNameKey, ToolGroupSpecIconName );
             ToolGroupButton toolGroupButton = _toolGroupButtonFactory.CreateBlue(toolGroup);
 
             // Add tools
             foreach (ITerrainTool tool in _terrainToolsManager.GetTools())
             {
                     var icon = tool.Icon != "" ? tool.Icon : ToolGroupSpecIconName;
+                    tool.SetToolGroup(toolGroup);
                     ToolButton button = _toolButtonFactory.Create( tool, icon, toolGroupButton.ToolButtonsElement);
                     toolGroupButton.AddTool(button);
             }
