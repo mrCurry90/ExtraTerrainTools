@@ -17,12 +17,12 @@ If you wish add your own tools to the toolbar check out NoiseGeneratorConfigurat
 ### Tools in v0.9
 
 - Editor History - You can now Undo your mistakes using all new shortcuts and keybindings to match.
-- - **Undo** / **Redo** - *Ctrl + Z* / *Y*
-- - **Undo x 5** / **Redo x 5** - *Ctrl + Shift + Z* / *Y*
+  - **Undo** / **Redo** - *Ctrl + Z* / *Y*
+  - **Undo x 5** / **Redo x 5** - *Ctrl + Shift + Z* / *Y*
 - Smoothing Brush - Smooth those harsh spikes and cliffs from the Heightmap Generator.
 - Mound Maker - Build a mountain or a boulder field. Using conical geometry as the base and multiple layers of noise to make mountain looking features. 
-- - Also comes with a dig mode (make a mountain shaped hole).
-- - Tweaking the noise parameters can give you a lot of different and interesting shapes.
+  - Also comes with a dig mode (make a mountain shaped hole).
+  - Tweaking the noise parameters can give you a lot of different and interesting shapes.
 - Heightmap Generator - Generate a procedurally generated map with a single click. See the [Heightmap Generator Manual](https://docs.google.com/document/d/1Y35eAUWDHY_j4pUGkCSBjHaMf2RxPHbqJ7wJm86qDFs/edit?usp=drive_link) for more details.
  
 
