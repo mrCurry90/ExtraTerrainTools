@@ -63,7 +63,7 @@ namespace TerrainTools.SmoothingBrush
                         _sampleSizeSlider.UpdateAsInt(_sampleSizeSliderValue);
                         _tool.SampleSize = (int)_sampleSizeSlider.value;
                     }, 
-                    1, 3, 1
+                    1, 3, 3
                 )
             );
 
@@ -75,7 +75,7 @@ namespace TerrainTools.SmoothingBrush
                         _forceSlider.UpdateAsPercent(_forceSliderValue);
                         _tool.Force = _forceSlider.value;
                     }, 
-                    0.1f, 0.6f, 1f
+                    0.1f, 1f, 1f
                 )
             );
 
@@ -132,8 +132,8 @@ namespace TerrainTools.SmoothingBrush
         private void SetDefaultOptions()
         {
             _sizeSlider.value       = 4;
-            _sampleSizeSlider.value = 1;
-            _forceSlider.value      = 0.6f;
+            _sampleSizeSlider.value = 3;
+            _forceSlider.value      = 1f;
             
             UpdateShapeToggles(true);
 

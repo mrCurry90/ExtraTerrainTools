@@ -19,6 +19,8 @@ namespace TerrainTools.MoundMaker
 {
     public class MoundMakerTool : ITerrainTool, IInputProcessor, ILoadableSingleton
     {
+        public override string Icon { get; } = "MoundToolIcon";
+
         public static readonly string ToolTitle = "Mound Maker";
         private static readonly string ToolDescriptionText = "Make a Mound";
 

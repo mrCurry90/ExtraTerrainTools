@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using TerrainTools.EditorHistory;
 using Timberborn.AssetSystem;
@@ -20,7 +19,7 @@ namespace TerrainTools.PathPainterTool
 {
     public class PathPainterTool : ITerrainTool, IInputProcessor, ILoadableSingleton
     {
-
+        public override string Icon { get; } = "LineToolIcon";
         public static readonly string ToolTitle = "Path Painter";
         private static readonly string ToolDescriptionText = "Draw paths";
 
@@ -80,12 +79,12 @@ namespace TerrainTools.PathPainterTool
             // _builder.AddSection("<color=#FFA500>...</color>");
             _toolDescription = _builder.Build();
 
-            _splineMaterial = _assetLoader.Load<Material>(
-                Path.Combine("Materials/SplineEditor", "SplineMaterial")
-            );
+            // _splineMaterial = _assetLoader.Load<Material>(
+            //     Path.Combine("Materials/SplineEditor", "SplineMaterial")
+            // );
 
             _markerDrawer = _markerDrawerFactory.CreateTileDrawer();
-            _splineDrawer = _meshDrawerFactory.Create(_splineMesh, _splineMaterial, _splineColor);
+            // _splineDrawer = _meshDrawerFactory.Create(_splineMesh, _splineMaterial, _splineColor);
 
             ResetSpline();
         }

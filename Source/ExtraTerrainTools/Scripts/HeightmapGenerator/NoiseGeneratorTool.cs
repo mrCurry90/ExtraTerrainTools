@@ -7,6 +7,8 @@ namespace TerrainTools.NoiseGenerator
     public class NoiseGeneratorTool : ITerrainTool, ILoadableSingleton
     {
         public static readonly string _toolTitle = "Heightmap Generator";
+        public override string Icon { get; } = "HeightmapToolIcon";
+
         private ToolDescription _toolDescription;
 
         public readonly NoiseGenerator _noiseGenerator;

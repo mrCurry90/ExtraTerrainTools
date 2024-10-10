@@ -16,6 +16,8 @@ namespace TerrainTools.SmoothingBrush
 {
     public class SmoothingBrushTool : ITerrainTool, IInputProcessor, ILoadableSingleton
     {
+        public override string Icon { get; } = "SmoothingToolIcon";
+
         public static readonly string ToolTitle = "Smoothing Brush";
         private static readonly string ToolDescriptionText = "Smoothing the terrain";
         private static readonly float MarkerYOffset = 0.02f;
