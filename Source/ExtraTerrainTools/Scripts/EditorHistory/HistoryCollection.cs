@@ -19,9 +19,9 @@ namespace TerrainTools.EditorHistory
             Now = 0;
         }
 
-        public void Insert( T item )
-        {               
-            if( Now < Count )
+        public void Insert(T item)
+        {
+            if (Now < Count)
             {
                 _items.RemoveRange(Now, Count - Now);
             }

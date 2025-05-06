@@ -1,0 +1,71 @@
+ID,Text,Comment
+TerrainTools.ToolGroupButton.Label,Extra Terrain Tools,Should be same as mod name
+TerrainTools.KeyBindingGroup.Label,Terrain Tools,Label for mod group in keybindings
+TerrainTools.Keybinding.Undo,Undo,Undo keybinding name (CTRL Z)
+TerrainTools.Keybinding.FastUndo,Undo x 5,Fast Undo keybinding name (CTRL SHIFT Z)
+TerrainTools.Keybinding.Redo,Redo,Redo keybinding name (CTRL Y)
+TerrainTools.Keybinding.FastRedo,Redo x 5,Fast Redo keybinding name (CTRL SHIFT Y)
+TerrainTools.Keybinding.CycleMode,Cycle Mode,"Cycle Mode keybinding name, used by Mound Maker"
+TerrainTools.Common.Button.Apply,Apply,Generic button to apply currently selected tool and options to the terrain
+TerrainTools.Common.Button.Reset,Reset,Generic button to reset the options in the selected tool
+TerrainTools.Heightmap.Tool.Title,Heightmap Generator,Title of the tool
+TerrainTools.Heightmap.Tool.Warning,Changes affect the entire map,"Warning that the tool has a global effect, displayed just above the toolbar in orange"
+TerrainTools.Heightmap.Button.Generate,Generate,Generate button label
+TerrainTools.Heightmap.Checkbox.ClearObjects,Clear existing objects,Checkbox label for clearing existing objects on or off
+TerrainTools.Heightmap.Generate.Hint,Click {0} to update the terrain.,"{0} contains the name of the generate button in bold, text is italicised"
+TerrainTools.Heightmap.Generate.Warning,{0} will be removed. This action cannot be undone.,{0} contains the text from Clear.WaterSourcesOnly or Clear.All
+TerrainTools.Heightmap.Clear.WaterSourcesOnly,All water sources,"Text displayed when in mode: clear all objects, text will be highlighted by colour"
+TerrainTools.Heightmap.Clear.All,All objects,"Text displayed when in mode: clear water sources only, text will be highlighted by colour"
+TerrainTools.Heightmap.Status.Idle,Idle,"Status text when not generating map, keep short"
+TerrainTools.Heightmap.Status.Generating,Generating,"Status text when generating map, keep short, is follow by percentage of map generated"
+TerrainTools.Heightmap.Seed.Label,Seed,"Label of the Seed editable field, keep same length as Seed.Lock.Label if possible"
+TerrainTools.Heightmap.Seed.Lock.Label,Lock,"Label of the checkbox to lock the seed field from editing, keep same length as Seed.Label if possible"
+TerrainTools.Heightmap.Slider.LOD,Level of detail,Label for slider controlling how much surface detail the generator will create
+TerrainTools.Heightmap.Slider.Amplitude,Amplitude,Label for slider controlling the amplitude of the noise function i.e. how high/low the hills/valleys are
+TerrainTools.Heightmap.Slider.Frequency,Frequency,Label for slider controlling the frequency of the noise function i.e. how many hills/valleys there are
+TerrainTools.Heightmap.Slider.Crest,Crest shape,"Label for curve slider adjusting the shape of the upper half of the noise, i.e. mountain crest"
+TerrainTools.Heightmap.Slider.Base,Base shape,"Label for curve slider adjusting the shape of the lower half of the noise, i.e. mountain base"
+TerrainTools.Heightmap.Slider.Mean,Mean height,Label for slider controlling the mean height
+TerrainTools.Heightmap.Slider.Min,Min height,Label for slider controlling the min height
+TerrainTools.Heightmap.Slider.Max,Max height,Label for slider controlling the max height
+TerrainTools.Heightmap.Slider.PeriodX,Period X,Label for slider controlling noise period in the X direction
+TerrainTools.Heightmap.Slider.PeriodY,Period Y,Label for sldier controllion noise period in the Y direction
+TerrainTools.PathPainter.Tool.Title,Path Painter,Title of the tool
+TerrainTools.PathPainter.Tool.Description,Adjust terrain using lines,"Description of the tool, the tool lets you draw lines and adjust terrain along it, keep short and sweet"
+TerrainTools.PathPainter.Tip.AddMove,{0} = Add or Move points,"Keybind Tip, {0} is replaced with the keybind for the respective"
+TerrainTools.PathPainter.Tip.DeleteHovered,{0} = Remove hovered point,"Keybind Tip, {0} is replaced with the keybind for the respective"
+TerrainTools.PathPainter.Tip.DeleteMultiple,{0} (Hold) = Remove points,"Keybind Tip, {0} is replaced with the keybind for the respective, key must be held to get the described effect"
+TerrainTools.PathPainter.Curve.Button.Line,Line,Text on button for entering mode to draw straight lines
+TerrainTools.PathPainter.Curve.Button.3Points,3 points,Text on button for entering mode to draw curves based on 3 points (2nd order Bezier curve)
+TerrainTools.PathPainter.Curve.Button.4Points,4 points,Text on button for entering mode to draw curves based on 4 points (3rd order Bezier curve)
+TerrainTools.PathPainter.Curve.Button.Continuous,Continuous,Text on button for entering mode to draw a curve passing through all points (Catmul-Rom Spline)
+TerrainTools.PathPainter.Curve.Toggle.SingleSegment,Single segment,When toggle is checked user can only draw one single line segment (based on current mode)
+TerrainTools.PathPainter.Curve.Toggle.DrawEndCaps,Smooth ends,When toggle is checked line endings will be smoothed out
+TerrainTools.PathPainter.Curve.Slider.Distance,Distance,Distance from line to paint terrain on
+TerrainTools.PathPainter.ToggleText.Symmetry,Symmetry,"Single word, if toggle is enabled left and right side will be identical"
+TerrainTools.PathPainter.ToggleText.Symmetry.On,Enabled,"Single word, matched with ToggleText.Symmetry to represent the On state"
+TerrainTools.PathPainter.ToggleText.Symmetry.Off,Disabled,"Single word, matched with ToggleText.Symmetry to represent the Off state"
+TerrainTools.PathPainter.Button.ClearAll,Clear path,"Clears all points, path is in reference to the tool name"
+TerrainTools.Smoothing.Tool.Title,Smoothing Brush,Title of the tool
+TerrainTools.Smoothing.Slider.Brush.Size,Brush size,Size of the brush
+TerrainTools.Smoothing.Slider.Sample.Size,Sample size,"Sample size of the brush, used for controlling how far to go when smoothing"
+TerrainTools.Smoothing.Slider.Force,Force,How strong the brush should smooth the terrain
+TerrainTools.Smoothing.ToggleGroup.Shape,Brush Shape,Label for the toggle group controlling the shape of the brush
+TerrainTools.Smoothing.Shape.Square,Square,Option for a square shaped brush
+TerrainTools.Smoothing.Shape.Circle,Circle,Option for a circular shaped brush
+TerrainTools.MoundMaker.Tool.Title,Mound Maker,Title fo the tool
+TerrainTools.MoundMaker.Hint.CycleSeed,{0} = Cycle seed,"Hint text for keybind to change the seed, {0} is replaced by actual keybind"
+TerrainTools.MoundMaker.Hint.DigMode,{0} (Hold) = Dig Mode,"Hint text for keybind to enter digging mode, when held, {0} is replaced by actual keybind"
+TerrainTools.MoundMaker.Header.Shape,Shape,Header label for Shape category of sliders
+TerrainTools.MoundMaker.Slider.PeakHeight,Peak height,Label for slider controlling the height of the peak
+TerrainTools.MoundMaker.Slider.MaxChange,Max change,Label for slider controlling the maximum adjustment allowed
+TerrainTools.MoundMaker.Header.RadialNoise,Radial Noise,Header label for Radial Noise category of sliders
+TerrainTools.MoundMaker.Slider.Radial.Scale,Scale,"Label for slider controlling radial noise scale, value in percentage"
+TerrainTools.MoundMaker.Slider.Radial.Frequency,Frequency,Label for slider controlling radial noise frequency
+TerrainTools.MoundMaker.Slider.Radial.Detail,Detail,Label for slider controlling radial noise level of detail
+TerrainTools.MoundMaker.Header.VerticalNoise,Vertical Noise,Header label for Vertical Noise category of sliders
+TerrainTools.MoundMaker.Slider.Vertical.Amplitude,Amplitude,"Label for slider controlling vertical noise amplitude, value in distance units"
+TerrainTools.MoundMaker.Slider.Vertical.Frequency,Frequency,Label for slider controlling vertical noise frequency
+TerrainTools.MoundMaker.Slider.Vertical.Detail,Detail,Label for slider controlling vertical noise level of detail
+TerrainTools.MoundMaker.Checkbox.Randomize,Randomize,Label for checkbox controlling auto-randomization of the seed
+TerrainTools.MoundMaker.Seed.Label,Seed,Label for seed display

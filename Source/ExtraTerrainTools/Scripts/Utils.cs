@@ -1,21 +1,39 @@
 using UnityEngine.UIElements;
 using Timberborn.AssetSystem;
-using System.Reflection;
 using System.Linq;
-using UnityEditor;
+using System.Text;
 
 namespace TerrainTools {
     internal class Utils
     {
-        private static readonly IAssetLoader _assetLoader;
+        private static string _PREFIX = "Mod: TerrainTools - ";
 
         public static void Log( string text ) {
-            UnityEngine.Debug.Log( "Mod: TerrainTools - " + text );
+            UnityEngine.Debug.Log(_PREFIX + text);
         }
-
-        public static void Log( string text, params object[] args)
+        
+        public static void Log(string text, params object[] args)
         {
             Log(string.Format(text, args));
+        }
+
+        public static void LogError(string text)
+        {
+            UnityEngine.Debug.LogError(_PREFIX + text);
+        }
+        
+        public static void LogError(string text, params object[] args)
+        {
+            LogError(string.Format(text, args));
+        }
+
+        public static void LogIndented(int indents, string text, params object[] args)
+        {
+            StringBuilder indentedString = new StringBuilder();
+            indentedString.Append("\t".PadLeft(indents));
+            indentedString.Append(text);
+
+            Log(string.Format(indentedString.ToString(), args));
         }
 
         public static void LogVisualTree(VisualElement node)

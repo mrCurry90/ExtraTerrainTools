@@ -17,7 +17,7 @@ namespace TerrainTools
 {
     public class ResetService : ILoadableSingleton
     {
-        private readonly BlockService _blockService;
+        private readonly IBlockService _blockService;
         private readonly EntityRegistry _entityRegistry;
         private readonly EntityService _entityService;
         private readonly ITerrainService _terrainService;
@@ -25,7 +25,7 @@ namespace TerrainTools
         private VisualElement _mapEditorSimPanel = null;
 
         public ResetService(
-            BlockService blockService,
+            IBlockService blockService,
             EntityRegistry entityRegistry,
             EntityService entityService,
             ITerrainService terrainService,

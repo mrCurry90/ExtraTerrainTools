@@ -16,11 +16,11 @@ public class TerrainToolsToolGroupFactory
 		_toolGroupButtonFactory = toolGroupButtonFactory;
 	}
 
-	public BottomBarElement Create(ToolGroupSpecification toolGroupSpecification, IEnumerable<PlaceableBlockObject> blockObjects)
+	public BottomBarElement Create(ToolGroupSpec toolGroupSpecification, IEnumerable<PlaceableBlockObjectSpec> blockObjects)
 	{
 		BlockObjectToolGroup toolGroup = new BlockObjectToolGroup(toolGroupSpecification);
 		ToolGroupButton toolGroupButton = _toolGroupButtonFactory.CreateGreen(toolGroup);
-		foreach (PlaceableBlockObject blockObject in blockObjects)
+		foreach (PlaceableBlockObjectSpec blockObject in blockObjects)
 		{
 			if (blockObject.UsableWithCurrentFeatureToggles)
 			{

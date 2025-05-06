@@ -11,8 +11,11 @@ namespace TerrainTools
 			containerDefinition.Bind<TerrainToolsManager>().AsSingleton();
 
 			// Service bindings
-			containerDefinition.Bind<ResetService>().AsSingleton();
+			containerDefinition.Bind<TerrainToolsAssetService>().AsSingleton();
 			containerDefinition.Bind<TerrainToolPanelFactory>().AsSingleton();
+			containerDefinition.Bind<ResetService>().AsSingleton();
+			containerDefinition.Bind<SpriteFlipper>().AsSingleton();
+			containerDefinition.Bind<SlopeImageService>().AsSingleton();
 
 			// BottomBarModule bindings
 			containerDefinition.Bind<TerrainToolsButtons>().AsSingleton();

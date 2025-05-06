@@ -12,7 +12,7 @@ namespace TerrainTools
 
         public static void UpdateAsInt(this Slider s, Label l )
         {
-            if(s.value % 1 > 0) 
+            if(s.value % 1 != 0) 
                 s.value = Mathf.Round(s.value);
             l.text = s.value.ToString();
         }

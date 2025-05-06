@@ -1,9 +1,11 @@
 namespace TerrainTools.EditorHistory
 {
-    public enum HistoryLog {
+    public enum HistoryLog
+    {
         None,
         History,
         Batch,
-        Item
+        Item,
+        Simplification
     }
 }

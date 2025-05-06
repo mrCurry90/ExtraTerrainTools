@@ -60,9 +60,9 @@ namespace TerrainTools
 
         private readonly AreaIterator _areaIterator;
 
-        private readonly BlockService _blockService;
+        private readonly IBlockService _blockService;
 
-        public StackedBlockObjectPicker(AreaIterator areaIterator, BlockService blockService)
+        public StackedBlockObjectPicker(AreaIterator areaIterator, IBlockService blockService)
         {
             _areaIterator = areaIterator;
             _blockService = blockService;

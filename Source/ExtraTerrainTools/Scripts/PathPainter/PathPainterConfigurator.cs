@@ -1,13 +1,14 @@
 using Bindito.Core;
 
-namespace TerrainTools.PathPainterTool
+namespace TerrainTools.PathPainter
 {
-    //[Context("MapEditor")]
-	[Context("Disabled")]
+    [Context("MapEditor")]
+	// [Context("Disabled")]
     public class PathPainterConfigurator : IConfigurator 
     {
         public void Configure(IContainerDefinition containerDefinition)
         {
+			containerDefinition.Bind<SplineDrawer>().AsSingleton();
 			containerDefinition.Bind<PathPainterTool>().AsSingleton();
 			containerDefinition.Bind<PathPainterToolPanel>().AsSingleton();
 

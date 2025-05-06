@@ -1,12 +1,14 @@
 using Timberborn.SingletonSystem;
 using Timberborn.ToolSystem;
 using TerrainTools.EditorHistory;
+using Timberborn.Localization;
 
 namespace TerrainTools.NoiseGenerator
 {
     public class NoiseGeneratorTool : ITerrainTool, ILoadableSingleton
     {
-        public static readonly string _toolTitle = "Heightmap Generator";
+        private readonly string _keyToolTitle = "TerrainTools.Heightmap.Tool.Title"; // Heightmap Generator
+        private static readonly string _keyWarningText = "TerrainTools.Heightmap.Tool.Warning"; // Changes affect the entire map.
         public override string Icon { get; } = "HeightmapToolIcon";
 
         private ToolDescription _toolDescription;
@@ -14,7 +16,7 @@ namespace TerrainTools.NoiseGenerator
         public readonly NoiseGenerator _noiseGenerator;
         private readonly EditorHistoryService _historyService;
 
-        public NoiseGeneratorTool( NoiseGenerator noiseGenerator, EditorHistoryService historyService )
+        public NoiseGeneratorTool(NoiseGenerator noiseGenerator, EditorHistoryService historyService, ILoc loc) : base(loc)
         {
             _noiseGenerator = noiseGenerator;
             _historyService = historyService;
@@ -22,9 +24,9 @@ namespace TerrainTools.NoiseGenerator
 
         public void Load()
         {
-            var _builder = new ToolDescription.Builder(_toolTitle);
+            var _builder = new ToolDescription.Builder(_loc.T(_keyToolTitle));
             // _builder.AddPrioritizedSection("Create a heightmap with a single click");
-            _builder.AddPrioritizedSection("<color=#FFA500>Changes affect the entire map.</color>");
+            _builder.AddPrioritizedSection("<color=#FFA500>" + _loc.T(_keyWarningText) + "</color>");
             _toolDescription = _builder.Build();
         }
 
@@ -39,21 +41,21 @@ namespace TerrainTools.NoiseGenerator
         }
 
         public void GenerateHeightMap(NoiseParameters parameters, bool clear)
-        {   
-            var mode = clear ? NoiseGenerator.UpdateMode.ClearExisting : NoiseGenerator.UpdateMode.UpdateExisting;            
+        {
+            var mode = clear ? NoiseGenerator.UpdateMode.ClearExisting : NoiseGenerator.UpdateMode.UpdateExisting;
             _historyService.BatchStart();
             _noiseGenerator.Generate(parameters, mode);
             _historyService.BatchStop();
-        }        
+        }
 
         public override void Enter()
         {
-            
+
         }
 
         public override void Exit()
         {
-            
+
         }
     }
 }

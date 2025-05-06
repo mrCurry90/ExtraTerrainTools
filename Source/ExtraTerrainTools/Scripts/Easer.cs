@@ -35,9 +35,19 @@ namespace TerrainTools
         public Easer( Direction dir, Function f ) {
             _f1 = GetFunc(dir, f);
         }
-        public Easer( Function f1, Function f2 ) {
-            _f1 = GetFunc(Direction.In, f1);
-            _f2 = GetFunc(Direction.Out, f2);
+        public Easer(Function f1, Function f2, Direction dir = Direction.In)
+        {
+            if (dir == Direction.In)
+            {
+                _f1 = GetFunc(Direction.In, f1);
+                _f2 = GetFunc(Direction.Out, f2);
+            }
+            else
+            {
+                _f1 = GetFunc(Direction.Out, f1);
+                _f2 = GetFunc(Direction.In, f2);
+            }         
+            
         }
         public float Value( float t )
         {

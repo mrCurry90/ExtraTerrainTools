@@ -176,7 +176,7 @@ namespace TerrainTools.NoiseGenerator
 			Utils.Log("NoiseGenerator - Generating terrain...");
 			for (int y = 0; y < terrainSize.y; y++)
 			{
-				for (int x = 0; x < terrainSize.x; x++)
+				for (int x = 0, h; x < terrainSize.x; x++)
 				{	
 					// Height generation
 					coord.x = x / terrainSize.x;
@@ -193,10 +193,11 @@ namespace TerrainTools.NoiseGenerator
 						Mathf.Clamp(terrainSize.z * eased + midOffset, floor, ceiling)
 					);
 
-					_terrainService.SetHeight(new Vector2Int(x, y), z);
-				
-					// I'm working on it!
-					_eventBus.Post(new GeneratorProgressEvent(this, (x + terrainSize.x * y) / n));
+					h = _terrainService.CellHeight(new Vector2Int(x, y));
+					_terrainService.AdjustTerrain(new Vector3Int(x, y, h), z-h);
+
+						// I'm working on it!
+						_eventBus.Post(new GeneratorProgressEvent(this, (x + terrainSize.x * y) / n));
 
 					// Chunk handling
 					if (cellsToDo > 0)

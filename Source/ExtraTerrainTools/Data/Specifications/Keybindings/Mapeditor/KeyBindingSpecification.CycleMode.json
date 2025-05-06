@@ -1,9 +1,0 @@
-﻿{
-  "Id": "CycleMode",
-  "GroupId": "MapEditor",
-  "LocKey": "TerrainTools.Keybinding.CycleMode",
-  "Order": 100,
-  "PrimaryInputBindingSpecification": {
-    "Path": "/Keyboard/tab"
-  }
-}

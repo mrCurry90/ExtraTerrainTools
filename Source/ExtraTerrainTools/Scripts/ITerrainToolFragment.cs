@@ -1,16 +1,13 @@
 using System;
-using System.Runtime.CompilerServices;
 using Timberborn.CoreUI;
-using Timberborn.EntitySystem;
-using Timberborn.GameDistricts;
+using Timberborn.Localization;
 using Timberborn.SingletonSystem;
 using Timberborn.ToolPanelSystem;
 using Timberborn.ToolSystem;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace TerrainTools
-{   
+{
     /*************************************************************
      TerrainTool class
         Extends Tool-class with additional methods to get 
@@ -19,19 +16,22 @@ namespace TerrainTools
     public abstract class ITerrainToolFragment : IToolFragment
     {
         private Type _toolType;
+        private int _baseOrder = 60;
+        protected readonly ILoc _loc;
         protected VisualElement Root { get; private set; }
 
-        private int _baseOrder = 60;
 
         public int Order { get { return _baseOrder + ToolOrder; } }
 
         protected int ToolOrder { private get; set; }
-        
-        private ITerrainToolFragment() {}
-        
-        public ITerrainToolFragment(EventBus eventBus, Type toolType)
+
+        private ITerrainToolFragment() { }
+
+        public ITerrainToolFragment(EventBus eventBus, Type toolType, ILoc loc)
         {
             _toolType = toolType;
+            _loc = loc;
+
             eventBus.Register(this);
         }
 
@@ -44,30 +44,29 @@ namespace TerrainTools
 
         public abstract VisualElement BuildToolPanelContent();
 
-       	[OnEvent]
-		public void OnToolEntered(ToolEnteredEvent toolEnteredEvent)
-		{
-			if (toolEnteredEvent.Tool.GetType() == _toolType)
-			{
+        [OnEvent]
+        public void OnToolEntered(ToolEnteredEvent toolEnteredEvent)
+        {
+            if (toolEnteredEvent.Tool.GetType() == _toolType)
+            {
                 OnToolEnteredDerived(toolEnteredEvent);
-				Root.ToggleDisplayStyle(visible: true);
-			}
-		}
-        
-        
-		[OnEvent]
-		public void OnToolExited(ToolExitedEvent toolExitedEvent)
-		{
+                Root.ToggleDisplayStyle(visible: true);
+            }
+        }
+
+
+        [OnEvent]
+        public void OnToolExited(ToolExitedEvent toolExitedEvent)
+        {
             if (toolExitedEvent.Tool.GetType() == _toolType)
-			{
+            {
                 OnToolExitedDerived(toolExitedEvent);
                 Root.ToggleDisplayStyle(visible: false);
             }
-		}
+        }
 
-        protected virtual void OnToolEnteredDerived(ToolEnteredEvent toolEnteredEvent){}
+        protected virtual void OnToolEnteredDerived(ToolEnteredEvent toolEnteredEvent) { }
 
-        protected virtual void OnToolExitedDerived(ToolExitedEvent toolExitedEvent){}
-
+        protected virtual void OnToolExitedDerived(ToolExitedEvent toolExitedEvent) { }
     }
 }
