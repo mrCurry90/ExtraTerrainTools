@@ -482,7 +482,6 @@ namespace TerrainTools.PathPainter
         {
             VisualElement root = _elementFactory.MakeDropdown(dropdownProvider, reverse, displayItemText: false);
             dropdownRef = root.Q<Dropdown>();
-            Utils.LogVisualTree(dropdownRef);
             return root;
         }
 

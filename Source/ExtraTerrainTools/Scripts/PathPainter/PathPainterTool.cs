@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 using TerrainTools.EditorHistory;
-using Timberborn.BlockSystem;
 using Timberborn.CameraSystem;
 using Timberborn.Common;
 using Timberborn.GridTraversing;
@@ -17,6 +16,7 @@ using Unity.Mathematics;
 using UnityEngine.Splines;
 using UnityEngine;
 using Timberborn.Localization;
+using Timberborn.MapIndexSystem;
 
 namespace TerrainTools.PathPainter
 {
@@ -35,9 +35,10 @@ namespace TerrainTools.PathPainter
         
         private readonly InputService _inputService;
         private readonly ITerrainService _terrainService;
-        private readonly IBlockService _blockService;
+        private readonly MapIndexService _mapIndexService;
         private readonly TerrainPicker _terrainPicker;
         private readonly CameraService _cameraService;
+        
         private readonly MarkerDrawerFactory _markerDrawerFactory;
         private readonly EditorHistoryService _historyService;
         private readonly SplineDrawer _splineDrawer;
@@ -155,13 +156,13 @@ namespace TerrainTools.PathPainter
         private Color[] _debugColors;
 
         public PathPainterTool(
-            InputService inputService, ITerrainService terrainService, IBlockService blockService, TerrainPicker terrainPicker, CameraService cameraService,
+            InputService inputService, ITerrainService terrainService, MapIndexService mapIndexService, TerrainPicker terrainPicker, CameraService cameraService,
             MarkerDrawerFactory markerDrawerFactory, EditorHistoryService historyService, SplineDrawer splineDrawer, ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
             _terrainService = terrainService;
-            _blockService = blockService;
+            _mapIndexService = mapIndexService;
             _terrainPicker = terrainPicker;
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;

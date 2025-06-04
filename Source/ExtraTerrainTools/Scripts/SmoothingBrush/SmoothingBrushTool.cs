@@ -215,11 +215,6 @@ namespace TerrainTools.SmoothingBrush
             return selected;
         }
 
-        private Heightmap BuildHeightmap()
-        {
-            return new(_terrainService);
-        }
-
         private float GetBrushStrength2(Vector2 point)
         {
             float x = Mathf.Abs(point.x - _center.x) / Size;
@@ -252,29 +247,6 @@ namespace TerrainTools.SmoothingBrush
             }
 
             return sample / n;
-        }
-
-        private void HeightmapToLog(Heightmap heightmap)
-        {
-            string[] rows = heightmap.RowsToString();
-            if (rows.Length < 1)
-                return;
-
-            string columns = "Col:";
-            for (int i = 0; i < heightmap.Size.x; i++)
-            {
-                columns += i.ToString().PadLeft(4, ' ');
-            }
-
-            Utils.Log(columns);
-
-            string rowIndex;
-            for (int i = 0; i < rows.Length; i++)
-            {
-                rowIndex = i.ToString().PadLeft(3, ' ');
-
-                Utils.Log("{0}:{1}", rowIndex, rows[i]);
-            }
         }
     }
 }

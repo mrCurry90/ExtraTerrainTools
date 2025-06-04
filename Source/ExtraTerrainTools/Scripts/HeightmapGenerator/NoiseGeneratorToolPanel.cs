@@ -1,5 +1,4 @@
 using System;
-using Timberborn.AssetSystem;
 using Timberborn.Beavers;
 using Timberborn.Localization;
 using Timberborn.SingletonSystem;

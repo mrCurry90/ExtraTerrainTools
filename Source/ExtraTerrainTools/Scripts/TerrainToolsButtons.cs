@@ -5,8 +5,8 @@ using Timberborn.ToolSystem;
 namespace TerrainTools 
 {
     public class TerrainToolsButtons : IBottomBarElementsProvider {
-        private static readonly string ToolGroupNameKey = "TerrainTools.ToolGroupButton";
-        private static readonly string ToolGroupSpecIconName = "TerrainToolsIconCol";//"TerrainToolsIcon";
+        private static readonly string ToolGroupNameKey = "TerrainTools.ToolGroupButton.Label";
+        private static readonly string ToolGroupSpecIconName = "TerrainToolsIconCol";
 
         private readonly ToolButtonFactory _toolButtonFactory;
         private readonly ToolGroupButtonFactory _toolGroupButtonFactory;
