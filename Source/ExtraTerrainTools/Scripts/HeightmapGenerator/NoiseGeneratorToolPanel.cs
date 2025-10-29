@@ -8,7 +8,7 @@ using EaserFunction = TerrainTools.Easer.Function;
 
 namespace TerrainTools.NoiseGenerator
 {
-    public class NoiseGeneratorToolPanel : ITerrainToolFragment
+    public class NoiseGeneratorToolPanel : TerrainToolFragment
     {
         private readonly NoiseGeneratorTool _tool;
         private readonly TerrainToolPanelFactory _elementFactory;
@@ -122,7 +122,7 @@ namespace TerrainTools.NoiseGenerator
         {
             LoadAssets();
 
-            _noiseGeneratorPanel = _elementFactory.MakeTemplatePanel(FlexDirection.Column, Align.Stretch);
+            _noiseGeneratorPanel = _elementFactory.MakeToolPanel(FlexDirection.Column, Align.Stretch);
             var header = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
             _loadingLabel = _elementFactory.MakeLabel(_loc.T(_keyIdleText));
             var options = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
@@ -139,7 +139,7 @@ namespace TerrainTools.NoiseGenerator
 
             #region ToolContent.Header
             //--- Header ---//
-            header.Add(_elementFactory.MakeMinimizerButtonRow(options));
+            header.Add(_elementFactory.MakeMinimizerButton(options));
 
             // Warning label row
             _hintLabel = _elementFactory.MakeLabel("WarningLabel");
@@ -326,17 +326,17 @@ namespace TerrainTools.NoiseGenerator
             var footerRowRight = _elementFactory.MakeContainer(FlexDirection.Column, Align.FlexEnd, Justify.Center);
             footerRow.Add(footerRowLeft);
             footerRow.Add(footerRowRight);
-            
+
             var generateRow = _elementFactory.MakeContainer(FlexDirection.Row, Align.Center, Justify.FlexStart);
             footerRowLeft.Add(generateRow);
 
             // Generate button
-            _generateButton = _elementFactory.MakeButton(_loc.T(_keyGenerateButtonLabel), delegate
+            _generateButton = _elementFactory.MakeTextButton(_loc.T(_keyGenerateButtonLabel), delegate
             {
                 OnClickGenerate();
             });
             generateRow.Add(_generateButton);
-        
+
             // Update Mode toggle
             _modeToggle = _elementFactory.MakeToggle(_loc.T(_keyCbClearObjectsLabel), UpdateHintText);
             _modeToggle.style.alignSelf = Align.FlexEnd;
@@ -344,7 +344,7 @@ namespace TerrainTools.NoiseGenerator
 
             // Reset button
             footerRowRight.Add(
-                _elementFactory.MakeButton(_loc.T(_keyResetButtonLabel), delegate
+                _elementFactory.MakeTextButton(_loc.T(_keyResetButtonLabel), delegate
                 {
                     SetDefaultOptions();
                 })

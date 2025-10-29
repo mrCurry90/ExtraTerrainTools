@@ -16,11 +16,10 @@ using Unity.Mathematics;
 using UnityEngine.Splines;
 using UnityEngine;
 using Timberborn.Localization;
-using Timberborn.MapIndexSystem;
 
 namespace TerrainTools.PathPainter
 {
-    public class PathPainterTool : ITerrainTool, IInputProcessor, ILoadableSingleton
+    public class PathPainterTool : TerrainTool, IInputProcessor, ILoadableSingleton
     {
         public override string Icon { get; } = "LineToolIcon";
         private readonly string _keyToolTitle = "TerrainTools.PathPainter.Tool.Title"; // Path Painter
@@ -32,13 +31,12 @@ namespace TerrainTools.PathPainter
         public static string DeleteKeybind => _deleteKeybind;
 
         private static readonly float MarkerYOffset = 0.02f;
-        
+
         private readonly InputService _inputService;
         private readonly ITerrainService _terrainService;
-        private readonly MapIndexService _mapIndexService;
         private readonly TerrainPicker _terrainPicker;
         private readonly CameraService _cameraService;
-        
+
         private readonly MarkerDrawerFactory _markerDrawerFactory;
         private readonly EditorHistoryService _historyService;
         private readonly SplineDrawer _splineDrawer;
@@ -52,9 +50,7 @@ namespace TerrainTools.PathPainter
         private MeshDrawer _markerDrawer;
         private ToolDescription _toolDescription;
 
-        // private int _width;
         private int _radius;
-        // private float _strokeDistance = 2;
         private float _strokeOffset = 0.5f;
 
         public int Width
@@ -156,13 +152,12 @@ namespace TerrainTools.PathPainter
         private Color[] _debugColors;
 
         public PathPainterTool(
-            InputService inputService, ITerrainService terrainService, MapIndexService mapIndexService, TerrainPicker terrainPicker, CameraService cameraService,
+            InputService inputService, ITerrainService terrainService, TerrainPicker terrainPicker, CameraService cameraService,
             MarkerDrawerFactory markerDrawerFactory, EditorHistoryService historyService, SplineDrawer splineDrawer, ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
             _terrainService = terrainService;
-            _mapIndexService = mapIndexService;
             _terrainPicker = terrainPicker;
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;
@@ -199,29 +194,6 @@ namespace TerrainTools.PathPainter
             }
         }
 
-        // private void MakeRandom()
-        // {  
-        //     Vector3Int size = _terrainService.Size;
-        //     int n = 6;
-
-        //     List<Vector3> points = new();
-        //     for (int i = 0; i < n; i++)
-        //     {
-        //         Vector2Int p1 = new(
-        //             Random.Range(0, size.x),
-        //             Random.Range(0, size.y)
-        //         );
-
-        //         Vector3 p2 = new(p1.x, _terrainService.CellHeight(p1), p1.y);
-        //         p2 += _gridCenterOffset;
-
-        //         points.Add(p2);
-
-        //     }
-
-        //     _splineDrawer.SetPoints(points);
-        // }
-
         private void ToggleHelpers(bool active)
         {
             _splineDrawer.Visible = active;
@@ -235,38 +207,6 @@ namespace TerrainTools.PathPainter
             }
         }
 
-        // private List<GameObject> splineKnotMarkers = new();
-        // private Material LitMaterial;
-        // private void DrawSplineKnots(Spline spline)
-        // {
-        //     if (LitMaterial == null)
-        //     {
-        //         LitMaterial = new Material(
-        //             Shader.Find("Universal Render Pipeline/Lit")
-        //         );
-        //         LitMaterial.color = Color.green;
-        //     }
-
-        //     var scale = new Vector3(0.25f, 0.25f, 0.25f);
-
-        //     foreach (var go in splineKnotMarkers)
-        //     {
-        //         GameObject.Destroy(go);
-        //     }
-
-        //     splineKnotMarkers.Clear();
-        //     foreach (var knot in spline)
-        //     {
-        //         var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        //         cube.GetComponent<Collider>().enabled = false;
-        //         cube.transform.localScale = scale;
-        //         cube.transform.position = knot.Position;
-        //         cube.transform.LookAt(knot.Position + knot.TangentOut);
-        //         cube.GetComponent<MeshRenderer>().material = LitMaterial;
-        //         splineKnotMarkers.Add(cube);
-        //     }
-        // }
-
         private void Rebuild()
         {
             OnSplineRebuilt(_splineDrawer.Spline);
@@ -274,9 +214,6 @@ namespace TerrainTools.PathPainter
 
         private void OnSplineRebuilt(Spline spline)
         {
-            // if(_curveDebug)
-            //     DrawSplineKnots(spline);
-
             spline.GetBounds(out Vector3Int min, out Vector3Int max);
             Vector3Int size = _terrainService.Size;
             min.x = Mathf.Max(0, min.x - _radius - 1);
@@ -289,13 +226,10 @@ namespace TerrainTools.PathPainter
             int area = (max.x - min.x) * (max.z - min.z);
             Vector3 gridOffset = new(0.5f, 0.5f, 0.5f);
 
-            // Utils.Log("min: {0}", min);
-            // Utils.Log("max: {0}", max);            
-
             ConcurrentDictionary<Vector2Int, CurveCoordinateT> distanceField = new(Environment.ProcessorCount, area);
             CurveCoordinateT fieldDefault = new() { distance = StrokeDistance };
 
-            // Compute and store curve lengths on the main thread
+            // Call GetCurveLength to precompute and cache the result on the main thread
             for (int i = 0; i < spline.GetCurveCount(); i++)
             {
                 spline.GetCurveLength(i);
@@ -345,28 +279,6 @@ namespace TerrainTools.PathPainter
                 }
             });
 
-            // for (float y = min.z; y < max.z; y++) // y = z because we are converting from world space to grid space
-            // {
-            //     for (float x = min.x; x < max.x; x++)
-            //     {
-            //         Vector2Int coord = new((int)x, (int)y);
-            //         Vector3 point = new(x, _terrainService.CellHeight(coord), y);
-            //         SplineUtility.GetNearestPoint(spline, point, out float3 nearest, out float t);
-
-            //         // We're only interested in horizontal distance
-            //         Vector2 p1 = point.XZ();
-
-            //         Vector2 p2 = new(nearest.x, nearest.z);
-            //         float distance = (p2 - p1).magnitude;
-
-            //         if( distance < distanceField.GetValueOrDefault(coord, fieldDefault).distance )
-            //         {
-            //             CurveCoordinateT projection = new(nearest, t, distance);
-            //             distanceField[coord] = projection;
-            //         }
-            //     }
-            // }
-
             _distanceField = distanceField;
         }
 
@@ -383,14 +295,12 @@ namespace TerrainTools.PathPainter
         public override void Enter()
         {
             _inputService.AddInputProcessor(this);
-            //Spline.Changed += OnSplineChanged; 
             ToggleHelpers(true);
         }
 
         public override void Exit()
         {
             _inputService.RemoveInputProcessor(this);
-            //Spline.Changed -= OnSplineChanged;   
             ToggleHelpers(false);
         }
 
@@ -413,7 +323,6 @@ namespace TerrainTools.PathPainter
             {
                 _removeHeldTimer = 0;
                 _removeRateTimer = 0;
-                // _splineDrawer.RemoveLastPoint();
                 if (_focusedPoint != null)
                 {
                     _splineDrawer.RemovePoint(_focusedPoint);
@@ -437,7 +346,6 @@ namespace TerrainTools.PathPainter
             {
                 ray = _cameraService.ScreenPointToRayInWorldSpace(_inputService.MousePosition);
                 bool hit = false;
-                // if( Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, Physics.AllLayers, QueryTriggerInteraction.Collide) )
                 if (Physics.Raycast(ray, out RaycastHit hitInfo))
                 {
                     if (hitInfo.collider != null)
@@ -549,7 +457,10 @@ namespace TerrainTools.PathPainter
                     Mathf.LerpUnclamped(nearHeight, farHeight, easer.Value(t))
                 );
 
-                _terrainService.AdjustTerrain(new(coordinates.x, coordinates.y, _terrainService.CellHeight(coordinates)), adjustBy);
+                Vector3Int adjustCoord = new(coordinates.x, coordinates.y, Mathf.FloorToInt(curveData.coord.y));
+                adjustCoord.z = _terrainService.GetTerrainHeight(adjustCoord);
+
+                _terrainService.AdjustTerrain(adjustCoord, adjustBy);
             }
 
             _historyService.BatchStop();
@@ -569,19 +480,6 @@ namespace TerrainTools.PathPainter
             return false;
         }
 
-        private bool HasRayHitPlane(Ray ray, int referenceHeight, out Vector3Int where)
-        {
-            TraversedCoordinates? coordinates = _terrainPicker.FindCoordinatesOnLevelInMap(ray, referenceHeight);
-            if (coordinates.HasValue)
-            {
-                where = coordinates.GetValueOrDefault().Coordinates;
-                return true;
-            }
-
-            where = Vector3Int.zero;
-            return false;
-        }
-
         private void DrawPreviewTiles(Color nearColor, Color farColor)
         {
             if (_distanceField.Count > 0)
@@ -594,7 +492,8 @@ namespace TerrainTools.PathPainter
                     {
                         coord.x = pair.Key.x;
                         coord.y = pair.Key.y;
-                        coord.z = _terrainService.CellHeight(pair.Key);
+                        coord.z = Mathf.FloorToInt(pair.Value.coord.y);
+                        coord.z = _terrainService.GetTerrainHeight(coord);
                         col = Color.Lerp(
                             nearColor, farColor,
                             Mathf.Abs(pair.Value.distance / StrokeDistance)
@@ -608,7 +507,8 @@ namespace TerrainTools.PathPainter
                     {
                         coord.x = pair.Key.x;
                         coord.y = pair.Key.y;
-                        coord.z = _terrainService.CellHeight(pair.Key);
+                        coord.z = Mathf.FloorToInt(pair.Value.coord.y);
+                        coord.z = _terrainService.GetTerrainHeight(coord);
 
                         int colIndex = Mathf.FloorToInt(Mathf.Lerp(0, _debugColors.Length, pair.Value.t));
                         col = _debugColors[colIndex % _debugColors.Length];
@@ -616,52 +516,6 @@ namespace TerrainTools.PathPainter
                     }
                 }
             }
-
-
-            // Vector3Int coordinates;
-            // float distance;
-
-            // // Draw knots
-            // List<Vector3Int> knotCoordinates = new(_maxNodes);
-            // foreach (var knot in _spline)
-            // {
-            //     coordinates = GetTerrainCoordinateAt(knot.Position.ToVector3Int());
-            //     coordinates.z = _terrainService.CellHeight(coordinates.XY());
-            //     knotCoordinates.Add(coordinates);
-            //     _markerDrawer.DrawAtCoordinates(coordinates, MarkerYOffset, knotColor);
-            // }
-
-            // // Draw spline
-            // Dictionary<Vector2Int,float> coordDistToSpline = new();
-            // for (int i = 0; i < _spline.Count; i++)
-            // {
-
-            // }
-
-            // // Draw fill
-            // foreach (var selected in GetSelectedCoordinates())
-            // {
-            //     coordinates = GetTerrainCoordinateAt(selected.Key);
-            //     if( knotCoordinates.Contains(coordinates) )
-            //         continue;
-
-            //     distance = selected.Value;
-            //     _markerDrawer.DrawAtCoordinates(coordinates, MarkerYOffset, fillColor);
-            // }
         }
-
-        private Vector3Int GetTerrainCoordinateAt(Vector3Int refCoord)
-        {
-            refCoord.z = _terrainService.CellHeight(refCoord.XY());
-            return refCoord;
-        }
-
-        private Vector3Int GetTerrainCoordinateAt(Vector2Int coord)
-        {
-            Vector3Int tmp = coord.XYZ();
-            tmp.z = _terrainService.CellHeight(coord);
-            return tmp;
-        }
-
     }
 }

@@ -20,7 +20,7 @@ using Timberborn.Localization;
 
 namespace TerrainTools.MoundMaker
 {
-    public class MoundMakerTool : ITerrainTool, IInputProcessor, ILoadableSingleton
+    public class MoundMakerTool : TerrainTool, IInputProcessor, ILoadableSingleton
     {
         private struct Adjustment
         {
@@ -29,20 +29,18 @@ namespace TerrainTools.MoundMaker
 
             public Adjustment(Vector3Int coordinate, int size)
             {
-                Coord   = coordinate;
-                Size    = size;
+                Coord = coordinate;
+                Size = size;
             }
         }
 
         public override string Icon { get; } = "MoundToolIcon";
 
         private readonly string _keyToolTitle = "TerrainTools.MoundMaker.Tool.Title"; // Mound Maker
-        
-        private static readonly string _reseedKeybind = "CycleMode"; // Tab
-        private static readonly string _cancelKeybind = "RotateClockwise"; // R - TODO make keybinding
+
+        private static readonly string _reseedKeybind = "ExtraTerrainTools.CycleMode"; // Tab
         private static readonly string _flipModeKeybind = "InverseBrushDirection"; // Ctrl - TODO make keybinding
         public static string ReseedKeybind => _reseedKeybind;
-        public static string CancelKeybind => _cancelKeybind;
         public static string FlipModeKeybind => _flipModeKeybind;
 
 
@@ -76,7 +74,7 @@ namespace TerrainTools.MoundMaker
         private Vector3Int _selectionCenter;
         private Vector3Int _selectionEnd;
         private string _seed = null;
-        public event EventHandler<string> SeedUpdated;        
+        public event EventHandler<string> SeedUpdated;
 
         private int _maxTerrainHeight = GetMaxHeight();
 
@@ -149,22 +147,22 @@ namespace TerrainTools.MoundMaker
         {
             Raise = !_inputService.IsKeyHeld(FlipModeKeybind);
 
-            if(_inputService.IsKeyDown(ReseedKeybind))
+            if (_inputService.IsKeyDown(ReseedKeybind))
             {
                 Reseed();
             }
 
             Ray ray = _cameraService.ScreenPointToRayInGridSpace(_inputService.MousePosition);
-            if( !_dragging )
+            if (!_dragging)
             {
-                if( _inputService.MainMouseButtonDown && !_inputService.MouseOverUI )
+                if (_inputService.MainMouseButtonDown && !_inputService.MouseOverUI)
                 {
-                    if( HasRayHitTerrain(ray, out _selectionCenter) )
+                    if (HasRayHitTerrain(ray, out _selectionCenter))
                     {
                         _dragging = true;
                     }
                 }
-                else if( !_inputService.MouseOverUI )
+                else if (!_inputService.MouseOverUI)
                 {
                     if (HasRayHitTerrain(ray, out Vector3Int hoverCoord))
                     {
@@ -173,30 +171,30 @@ namespace TerrainTools.MoundMaker
                 }
             }
             // else if( _inputService.IsKeyDown(CancelKeybind) )
-            else if( _inputService.Cancel )
+            else if (_inputService.Cancel)
             {
                 _dragging = false;
                 ResetSelection();
                 return true;
             }
-            else if( !_inputService.MainMouseButtonHeld )
+            else if (!_inputService.MainMouseButtonHeld)
             {
                 _dragging = false;
-                
-                if( (_selectionEnd - _selectionCenter).sqrMagnitude > 1 )
+
+                if ((_selectionEnd - _selectionCenter).sqrMagnitude > 1)
                 {
                     ApplySelection();
-                    if(AutoReseed)
+                    if (AutoReseed)
                     {
                         Reseed();
                     }
                 }
             }
-            else if( HasRayHitPlane(ray, _selectionCenter.z, out _selectionEnd) )
+            else if (HasRayHitPlane(ray, _selectionCenter.z, out _selectionEnd))
             {
                 DrawPreviewTiles();
-            }        
-            
+            }
+
             return false;
         }
 
@@ -251,7 +249,7 @@ namespace TerrainTools.MoundMaker
 
         private void DrawHoverTile(Vector3Int coordinates)
         {
-            _meshDrawer.DrawAtCoordinates( coordinates, MarkerYOffset, HoverTileColor );
+            _meshDrawer.DrawAtCoordinates(coordinates, MarkerYOffset, HoverTileColor);
         }
 
         private bool TryGetTerrainHeight(Vector3Int coord, out int relativeHeight)
@@ -263,7 +261,7 @@ namespace TerrainTools.MoundMaker
 
             if (_terrainService.OnGround(coord) || _terrainService.Underground(coord))
                 return true; // If we're on or under ground the return from TryGetRelativeHeight will be correct
-            
+
             // Utils.Log("TryGetRelativeHeight - relativeHeight: {0}", relativeHeight);
 
             TryGetRelativeHeightOfObjectBelow(coord, Mathf.Abs(relativeHeight), out relativeHeight);
@@ -337,7 +335,7 @@ namespace TerrainTools.MoundMaker
             return !_blockService.AnyObjectAt(coord) && (
                 _terrainService.Underground(below)
                 ||
-                _blockService.GetTopObjectAt(below).PositionedBlocks.GetBlock(below).Stackable == BlockStackable.BlockObject
+                _blockService.GetTopObjectAt(below)?.PositionedBlocks?.GetBlock(below).Stackable == BlockStackable.BlockObject
             );
         }
 
@@ -429,35 +427,35 @@ namespace TerrainTools.MoundMaker
                     continue;
 
                 if (Raise)
-                    {
-                        TryGetDistanceToObjectAbove(terrainCoord, adjustZ, out adjustZ);
+                {
+                    TryGetDistanceToObjectAbove(terrainCoord, adjustZ, out adjustZ);
 
-                        coordinates.z = Mathf.Clamp(coordinates.z + adjustZ, 0, _maxTerrainHeight);
+                    coordinates.z = Mathf.Clamp(coordinates.z + adjustZ, 0, _maxTerrainHeight);
 
-                        canApply = IsEmptyAndStackable(terrainCoord);
-                        drawColor = HeightToColor(raiseHeightColors, coordinates.z, terrainCoord.z, _maxTerrainHeight);
-                        drawAt = coordinates;
-                    }
-                    else
-                    {
-                        coordinates.z = Mathf.Clamp(terrainCoord.z - adjustZ, 0, _maxTerrainHeight);
-                        // Utils.Log("_selectionCenter: {0}", _selectionCenter);
-                        // Utils.Log("terrainCoord: {0}", terrainCoord);
-                        // Utils.Log("adjustZ: {0}", adjustZ);
-                        // Utils.Log("Coordinates: {0}", coordinates);
+                    canApply = IsEmptyAndStackable(terrainCoord);
+                    drawColor = HeightToColor(raiseHeightColors, coordinates.z, terrainCoord.z, _maxTerrainHeight);
+                    drawAt = coordinates;
+                }
+                else
+                {
+                    coordinates.z = Mathf.Clamp(terrainCoord.z - adjustZ, 0, _maxTerrainHeight);
+                    // Utils.Log("_selectionCenter: {0}", _selectionCenter);
+                    // Utils.Log("terrainCoord: {0}", terrainCoord);
+                    // Utils.Log("adjustZ: {0}", adjustZ);
+                    // Utils.Log("Coordinates: {0}", coordinates);
 
-                        canApply = true; //_blockService.AnyObjectAtColumn(coordinates.XY(), coordinates.z, terrainCoord.z);
-                        drawColor = HeightToColor(lowerHeightColors, coordinates.z, 0, terrainCoord.z);
-                        // Utils.Log("Color: {0}", drawColor);
-                        drawAt = new(coordinates.x, coordinates.y, terrainCoord.z);
-                    }
+                    canApply = true; //_blockService.AnyObjectAtColumn(coordinates.XY(), coordinates.z, terrainCoord.z);
+                    drawColor = HeightToColor(lowerHeightColors, coordinates.z, 0, terrainCoord.z);
+                    // Utils.Log("Color: {0}", drawColor);
+                    drawAt = new(coordinates.x, coordinates.y, terrainCoord.z);
+                }
 
                 if (!canApply)
                 {
                     drawAt.z = terrainCoord.z;
                     drawColor = BlockedTileColor;
                 }
-                
+
                 drawAt.z -= 1;
 
                 if (drawAt.z > _maxTerrainHeight)
@@ -474,15 +472,15 @@ namespace TerrainTools.MoundMaker
         {
             FieldInfo maxHeightField = typeof(MapSize).GetField("MaxMapEditorTerrainHeight", BindingFlags.Static | BindingFlags.Public);
 
-			return (int)maxHeightField.GetValue(null);
+            return (int)maxHeightField.GetValue(null);
         }
 
-        private static Color HeightToColor( Color[] colors, int sample, int min, int max)
+        private static Color HeightToColor(Color[] colors, int sample, int min, int max)
         {
             if (min >= max || sample <= min)
                 return colors[0];
 
-            if( sample >= max )
+            if (sample >= max)
                 return colors.Last();
 
             float d = (colors.Count() - 1) * (sample - min) / (float)(max - min);

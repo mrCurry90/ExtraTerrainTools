@@ -18,7 +18,8 @@ namespace TerrainTools
             Sounds,
             Localizations,
             Specifications,
-            Sprites
+            Sprites,
+            UI
         }
 
         private readonly Dictionary<Folder, string> paths = new();
@@ -30,6 +31,7 @@ namespace TerrainTools
         private readonly static string locPath = "Localizations";
         private readonly static string specPath = "Specifications";
         private readonly static string spritePath = "Sprites";
+        private readonly static string uiPath = "UI";
 
         public TerrainToolsAssetService(IAssetLoader assetLoader)
         {
@@ -42,6 +44,7 @@ namespace TerrainTools
             paths.Add(Folder.Localizations, locPath);
             paths.Add(Folder.Specifications, specPath);
             paths.Add(Folder.Sprites, spritePath);
+            paths.Add(Folder.UI, uiPath);
         }
 
         public void Load()
@@ -49,10 +52,10 @@ namespace TerrainTools
         }
 
         private string GetFolderPath(Folder folder)
-        {            
+        {
             if (paths.TryGetValue(folder, out string value))
-                    return value;
-                else throw new KeyNotFoundException(folder.ToString());
+                return value;
+            else throw new KeyNotFoundException(folder.ToString());
         }
 
         public T Fetch<T>(string path, Folder folder = Folder.None)

@@ -1,0 +1,15 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.RedoTerrain",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Redo",
+		"Order": 101,
+		"AllowOtherModifiers": false,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/y",
+		"InputModifiers": "Ctrl",
+		"Unchangeable": false
+	}
+}

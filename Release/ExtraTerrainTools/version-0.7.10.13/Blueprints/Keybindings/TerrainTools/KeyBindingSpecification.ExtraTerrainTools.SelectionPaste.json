@@ -1,0 +1,15 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionPaste",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.Paste",
+		"Order": 152,
+		"AllowOtherModifiers": false,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/v",
+		"InputModifiers": "Ctrl",
+		"Unchangeable": false
+	}
+}

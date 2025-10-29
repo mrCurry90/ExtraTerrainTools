@@ -2,15 +2,18 @@ using Bindito.Core;
 using Timberborn.BottomBarSystem;
 using Timberborn.ToolPanelSystem;
 
-namespace TerrainTools 
+namespace TerrainTools
 {
 	[Context("MapEditor")]
-	public class TerrainToolsConfigurator : IConfigurator {
-		public void Configure(IContainerDefinition containerDefinition) {
+	public class TerrainToolsConfigurator : IConfigurator
+	{
+		public void Configure(IContainerDefinition containerDefinition)
+		{
 			// TerrainTools manager
 			containerDefinition.Bind<TerrainToolsManager>().AsSingleton();
 
 			// Service bindings
+			containerDefinition.Bind<TerrainToolsManipulationService>().AsSingleton();
 			containerDefinition.Bind<TerrainToolsAssetService>().AsSingleton();
 			containerDefinition.Bind<TerrainToolPanelFactory>().AsSingleton();
 			containerDefinition.Bind<ResetService>().AsSingleton();
@@ -37,7 +40,7 @@ namespace TerrainTools
 			{
 				ToolPanelModule.Builder builder = new();
 
-				foreach( var panel in _toolManager.GetToolPanels() )
+				foreach (var panel in _toolManager.GetToolPanels())
 				{
 					builder.AddFragment(panel, panel.Order);
 				}
@@ -47,11 +50,12 @@ namespace TerrainTools
 		}
 
 		public class BottomBarModuleProvider : IProvider<BottomBarModule>
-		{	
+		{
 			private readonly TerrainToolsButtons _terrainToolButtons;
 			public BottomBarModuleProvider(
-        		TerrainToolsButtons terrainToolButtons
-			) {
+				TerrainToolsButtons terrainToolButtons
+			)
+			{
 				_terrainToolButtons = terrainToolButtons;
 			}
 			public BottomBarModule Get()

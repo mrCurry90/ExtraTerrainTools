@@ -10,7 +10,7 @@ using Timberborn.KeyBindingSystemUI;
 
 namespace TerrainTools.PathPainter
 {
-    public class PathPainterToolPanel : ITerrainToolFragment
+    public class PathPainterToolPanel : TerrainToolFragment
     {
         private readonly TerrainToolPanelFactory _elementFactory;
         private readonly PathPainterTool _tool;
@@ -118,7 +118,7 @@ namespace TerrainTools.PathPainter
         {
             _linkToggles.Clear();
 
-            _toolPanel = _elementFactory.MakeTemplatePanel(FlexDirection.Column, Align.Stretch);
+            _toolPanel = _elementFactory.MakeToolPanel(FlexDirection.Column, Align.Stretch);
             var header = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch, Justify.FlexStart);
             var content = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
             var footer = _elementFactory.MakeContainer(FlexDirection.Row, Align.Center, Justify.SpaceBetween);
@@ -127,7 +127,7 @@ namespace TerrainTools.PathPainter
             _toolPanel.Add(content);
             _toolPanel.Add(footer);
 
-            header.Add(_elementFactory.MakeMinimizerButtonRow(content));
+            header.Add(_elementFactory.MakeMinimizerButton(content));
 
             var tipRow1 = _elementFactory.MakeContainer(FlexDirection.Row, Align.Center, Justify.SpaceEvenly);
             var tipRow2 = _elementFactory.MakeContainer(FlexDirection.Row, Align.Center, Justify.SpaceEvenly);
@@ -162,10 +162,10 @@ namespace TerrainTools.PathPainter
             header.Add(tipRow2);
 
             _modeButtons = new[]{
-                _elementFactory.MakeButton(_loc.T(_keyButtonLine), OnModeSelect, SplineDrawerMode.Linear),
-                _elementFactory.MakeButton(_loc.T(_keyButton3Points), OnModeSelect, SplineDrawerMode.Quadratic),
-                _elementFactory.MakeButton(_loc.T(_keyButton4Points), OnModeSelect, SplineDrawerMode.Cubic),
-                _elementFactory.MakeButton(_loc.T(_keyButtonContinuous), OnModeSelect, SplineDrawerMode.Continuous)
+                _elementFactory.MakeTextButton(_loc.T(_keyButtonLine), OnModeSelect, SplineDrawerMode.Linear),
+                _elementFactory.MakeTextButton(_loc.T(_keyButton3Points), OnModeSelect, SplineDrawerMode.Quadratic),
+                _elementFactory.MakeTextButton(_loc.T(_keyButton4Points), OnModeSelect, SplineDrawerMode.Cubic),
+                _elementFactory.MakeTextButton(_loc.T(_keyButtonContinuous), OnModeSelect, SplineDrawerMode.Continuous)
             };
 
             var modeButtonsRow = _elementFactory.MakeContainer(FlexDirection.Row, Align.Center, Justify.SpaceEvenly);
@@ -238,7 +238,7 @@ namespace TerrainTools.PathPainter
             ));
 
             slopeRow.Add(
-                MakeSlopeDropdown(ref _leftSlopeDropdown, _leftSlopeDropdownProvider, reverse: true)
+                MakeSlopeDropdown(ref _leftSlopeDropdown, _leftSlopeDropdownProvider)
             );
 
             var paddedLinkToggle = MakeLinkToggle(canBeToggledByOther: true, (link) =>
@@ -373,17 +373,17 @@ namespace TerrainTools.PathPainter
             //     )
             // );
 
-            footer.Add(_elementFactory.MakeButton(_loc.T(_keyButtonApply), delegate
+            footer.Add(_elementFactory.MakeTextButton(_loc.T(_keyButtonApply), delegate
             {
                 _tool.Apply();
             }));
 
-            footer.Add(_elementFactory.MakeButton(_loc.T(_keyButtonClear), delegate
+            footer.Add(_elementFactory.MakeTextButton(_loc.T(_keyButtonClear), delegate
             {
                 _tool.ResetSpline();
             }));
 
-            footer.Add(_elementFactory.MakeButton(_loc.T(_keyButtonReset), delegate
+            footer.Add(_elementFactory.MakeTextButton(_loc.T(_keyButtonReset), delegate
             {
                 SetDefaultOptions();
             }));
@@ -478,9 +478,9 @@ namespace TerrainTools.PathPainter
             return root;
         }
 
-        private VisualElement MakeSlopeDropdown(ref Dropdown dropdownRef, IExtendedDropdownProvider dropdownProvider, bool reverse = false)
+        private VisualElement MakeSlopeDropdown(ref Dropdown dropdownRef, IExtendedDropdownProvider dropdownProvider)
         {
-            VisualElement root = _elementFactory.MakeDropdown(dropdownProvider, reverse, displayItemText: false);
+            VisualElement root = _elementFactory.MakeDropdown(dropdownProvider);
             dropdownRef = root.Q<Dropdown>();
             return root;
         }

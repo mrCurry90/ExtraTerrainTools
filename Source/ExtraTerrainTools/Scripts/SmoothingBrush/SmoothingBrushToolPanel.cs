@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace TerrainTools.SmoothingBrush
 {
-    public class SmoothingBrushToolPanel : ITerrainToolFragment
+    public class SmoothingBrushToolPanel : TerrainToolFragment
     {
         private readonly TerrainToolPanelFactory _elementFactory;
         private readonly SmoothingBrushTool _tool;
@@ -39,7 +39,7 @@ namespace TerrainTools.SmoothingBrush
 
         public override VisualElement BuildToolPanelContent()
         {
-            _toolPanel = _elementFactory.MakeTemplatePanel(FlexDirection.Column, Align.Stretch);
+            _toolPanel = _elementFactory.MakeToolPanel(FlexDirection.Column, Align.Stretch);
             // var header  = _elementFactory.MakeContainer( FlexDirection.Column, Align.Stretch );
             var content = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
             var footer = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
@@ -115,7 +115,7 @@ namespace TerrainTools.SmoothingBrush
             footer.Add(footerRow);
 
             footerRow.Add(
-                _elementFactory.MakeButton(_loc.T(_keyResetButtonLabel), delegate
+                _elementFactory.MakeTextButton(_loc.T(_keyResetButtonLabel), delegate
                 {
                     SetDefaultOptions();
                 })

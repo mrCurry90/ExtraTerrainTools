@@ -1,0 +1,14 @@
+{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionPosUp",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.PosUp",
+		"Order": 184,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/pageUp",
+		"Unchangeable": false
+	}
+}

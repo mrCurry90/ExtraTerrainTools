@@ -48,7 +48,7 @@ namespace TerrainTools
 
         public override readonly string ToString()
         {
-            return string.Format("coord: {0}, t: {1}, dist: {2}, index: {3}, tangent: {4}", coord, t, distance,curveIndex,tangent);
+            return string.Format("coord: {0}, t: {1}, dist: {2}, index: {3}, tangent: {4}", coord, t, distance, curveIndex, tangent);
         }
     }
 
@@ -103,10 +103,10 @@ namespace TerrainTools
                 var p = curve.EvaluatePosition(t);
                 if (p.x > max.x) max.x = p.x;
                 if (p.x < min.x) min.x = p.x;
-                
+
                 if (p.y > max.y) max.y = p.y;
                 if (p.y < min.y) min.y = p.y;
-                
+
                 if (p.z > max.z) max.z = p.z;
                 if (p.z < min.z) min.z = p.z;
             }
@@ -114,48 +114,48 @@ namespace TerrainTools
             Utils.Log("Bounds: {0} - {1}", min, max);
         }
 
-        private static List<float> GetQuadraticRoots( float a, float b, float c )
+        private static List<float> GetQuadraticRoots(float a, float b, float c)
         {
             List<float> roots = new();
 
             float sqrt = Mathf.Sqrt(b * b - 4 * a * c),
                   twoA = 2 * a;
 
-            roots.Add( (-b + sqrt) / twoA );
-            roots.Add( (-b - sqrt) / twoA );
+            roots.Add((-b + sqrt) / twoA);
+            roots.Add((-b - sqrt) / twoA);
 
             return roots;
         }
 
-        public static void ComputeCurvePositions( this BezierCurve curve, CurveCoordinateT[] lookupTable )
+        public static void ComputeCurvePositions(this BezierCurve curve, CurveCoordinateT[] lookupTable)
         {
             int length = lookupTable.Length;
-            if( length < 2) 
+            if (length < 2)
                 throw new ArgumentOutOfRangeException("lookupTable.Length", "Must be at least length of 2");
 
-            lookupTable[0] = new( EvaluatePosition(curve, 0) , 0);
+            lookupTable[0] = new(EvaluatePosition(curve, 0), 0);
             for (int i = 1; i < length - 1; i++)
             {
                 float t = i / length;
                 Vector3 p1 = EvaluatePosition(curve, t);
                 lookupTable[i] = new(p1, t);
             }
-            lookupTable[length - 1] = new( EvaluatePosition(curve, 1) , 1);
+            lookupTable[length - 1] = new(EvaluatePosition(curve, 1), 1);
         }
 
-        public static CurveCoordinateT ClosestPoint( this BezierCurve curve, Vector3 point, int initialSamples = 4 )
+        public static CurveCoordinateT ClosestPoint(this BezierCurve curve, Vector3 point, int initialSamples = 4)
         {
             if (initialSamples < 2)
-                initialSamples = Mathf.Max( Mathf.CeilToInt(CurveUtility.ApproximateLength(curve)), 2 );
+                initialSamples = Mathf.Max(Mathf.CeilToInt(CurveUtility.ApproximateLength(curve)), 2);
 
             var lookupTable = new CurveCoordinateT[initialSamples];
             curve.ComputeCurvePositions(lookupTable);
             return curve.ClosestPoint(point, lookupTable);
         }
 
-        public static CurveCoordinateT ClosestPoint( this BezierCurve curve, Vector3 point, CurveCoordinateT[] lookupTable )
+        public static CurveCoordinateT ClosestPoint(this BezierCurve curve, Vector3 point, CurveCoordinateT[] lookupTable)
         {
-            int i = ClosestPointInLUT(point, lookupTable), 
+            int i = ClosestPointInLUT(point, lookupTable),
                 iLast = lookupTable.Length - 1;
 
             CurveCoordinateT result = lookupTable[i];
@@ -182,7 +182,7 @@ namespace TerrainTools
                 for (int j = 1; j <= 3; j++)
                 {
                     float t = t1 + j * step;
-                    CurveCoordinateT n = new(curve.EvaluatePosition(t), t);                    
+                    CurveCoordinateT n = new(curve.EvaluatePosition(t), t);
                     n.distance = (point - n.coord).sqrMagnitude;
                     if (n.distance < dist)
                     {
@@ -196,7 +196,8 @@ namespace TerrainTools
 
                 lookupTable = lut;
                 c++;
-            };
+            }
+            ;
 
             result.distance = Mathf.Sqrt(result.distance);
 
@@ -210,7 +211,7 @@ namespace TerrainTools
             for (int i = 0; i < lookupTable.Length; i++)
             {
                 float d = (point - lookupTable[i].coord).sqrMagnitude;
-                if(d < min)
+                if (d < min)
                 {
                     min = d;
                     index = i;

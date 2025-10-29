@@ -1,24 +1,16 @@
 using System.Collections.Generic;
 using System;
-using Timberborn.BlockObjectTools;
 using Timberborn.BlockSystem;
-using Timberborn.Coordinates;
-using Timberborn.EntitySystem;
-using Timberborn.Growing;
 using Timberborn.InputSystem;
-using Timberborn.NaturalResources;
-using Timberborn.PrefabSystem;
 using Timberborn.SingletonSystem;
 using Timberborn.TerrainSystem;
-using Timberborn.WaterSourceSystem;
 using UnityEngine;
-using Timberborn.MapIndexSystem;
 using Timberborn.Common;
-using Timberborn.NaturalResourcesModelSystem;
+using System.Collections;
 
 namespace TerrainTools.EditorHistory
 {
-    public class EditorHistoryService : ILoadableSingleton, IInputProcessor
+    public class EditorHistoryService : ILoadableSingleton, IPostLoadableSingleton, IInputProcessor
     {
         public static HistoryLog LogLevel = HistoryLog.None;
 
@@ -27,12 +19,7 @@ namespace TerrainTools.EditorHistory
         private readonly ITerrainService _terrainService;
         private readonly InputService _inputService;
         private readonly EventBus _eventBus;
-        private readonly BlockObjectPlacerService _placerService;
-        private readonly EntityService _entityService;
-        private readonly PrefabNameMapper _prefabNameMapper;
-        private readonly IBlockService _blockService;
-        private readonly MapIndexService _mapIndexService;
-        private readonly BlockValidator _blockValidator;
+        private readonly TerrainToolsManipulationService _manipulationService;
         private HistoryCollection<List<HistoryEntry>> _history;
         private List<HistoryEntry> _batch = null;
         private bool _recordMouse = true;
@@ -44,22 +31,13 @@ namespace TerrainTools.EditorHistory
             ITerrainService terrainService,
             InputService inputService,
             EventBus eventBus,
-            BlockObjectPlacerService placerService,
-            EntityService entityService,
-            PrefabNameMapper prefabNameMapper,
-            IBlockService blockService,
-            MapIndexService mapIndexService,
-            BlockValidator blockValidator
-        ) {
+            TerrainToolsManipulationService manipulationService
+        )
+        {
             _terrainService = terrainService;
             _inputService = inputService;
             _eventBus = eventBus;
-            _placerService = placerService;
-            _entityService = entityService;
-            _prefabNameMapper = prefabNameMapper;
-            _blockService = blockService;
-            _blockValidator = blockValidator;
-            _mapIndexService = mapIndexService;
+            _manipulationService = manipulationService;
         }
 
         public void Load()
@@ -68,15 +46,19 @@ namespace TerrainTools.EditorHistory
             _batch = new();
             _terrainService.TerrainHeightChanged += OnTerrainChanged;
             _inputService.AddInputProcessor(this);
+        }
+
+        public void PostLoad()
+        {
             _eventBus.Register(this);
         }
 
-        private void OnTerrainChanged( object sender, TerrainHeightChangeEventArgs evt)
+        private void OnTerrainChanged(object sender, TerrainHeightChangeEventArgs evt)
         {
-            if( !_handleEvents )
+            if (!_handleEvents)
                 return;
 
-            _batch.Add( new(evt) );
+            _batch.Add(new(evt));
         }
 
         [OnEvent]
@@ -93,7 +75,7 @@ namespace TerrainTools.EditorHistory
             // Utils.Log("growable.IsGrown: {0}", growable.IsGrown);
             // Utils.Log("growable.GrowthProgress: {0}", growable.GrowthProgress);
 
-            CleanDuplicatesInBatch();            
+            CleanDuplicatesInBatch();
         }
 
 
@@ -147,7 +129,7 @@ namespace TerrainTools.EditorHistory
                 if (failed.Count > 0)
                 {
                     // Try redoing in Z-order ascending
-                    failed.Sort( OrderByObjectZ );
+                    failed.Sort(OrderByObjectZ);
                     foreach (var entry in failed)
                     {
                         if (!UndoSingle(entry))
@@ -189,16 +171,16 @@ namespace TerrainTools.EditorHistory
                 if (entry.ObjectEvent.IsSet)
                 {
                     // DeleteObject(entry.ObjectEvent.Object);
-                    var obj = GetObjectAt(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement.Coordinates);
+                    var obj = _manipulationService.GetFirstObjectAt(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement.Coordinates);
                     if (obj != null)
                     {
-                        DeleteObject(obj);
+                        _manipulationService.DeleteObject(obj);
                     }
                 }
                 else
                 {
                     // entry.ObjectEvent.Object = PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement);
-                    return PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement, entry.ObjectEvent.Growth);
+                    return _manipulationService.PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement, entry.ObjectEvent.Growth);
                 }
             }
             return true;
@@ -223,7 +205,7 @@ namespace TerrainTools.EditorHistory
                 if (failed.Count > 0)
                 {
                     // Try redoing in Z-order ascending
-                    failed.Sort( OrderByObjectZ );
+                    failed.Sort(OrderByObjectZ);
                     foreach (var entry in failed)
                     {
                         if (!RedoSingle(entry))
@@ -231,10 +213,10 @@ namespace TerrainTools.EditorHistory
                     }
                 }
             }
-            
 
 
-           //_handleEvents = true;
+
+            //_handleEvents = true;
         }
         private bool RedoSingle(HistoryEntry entry)
         {
@@ -267,15 +249,15 @@ namespace TerrainTools.EditorHistory
                 if (entry.ObjectEvent.IsSet)
                 {
                     // entry.ObjectEvent.Object = PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement);
-                    return PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement, entry.ObjectEvent.Growth);
+                    return _manipulationService.PlaceObject(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement, entry.ObjectEvent.Growth);
                 }
                 else
                 {
                     // DeleteObject(entry.ObjectEvent.Object);
-                    var obj = GetObjectAt(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement.Coordinates);
+                    var obj = _manipulationService.GetFirstObjectAt(entry.ObjectEvent.PrefabName, entry.ObjectEvent.Placement.Coordinates);
                     if (obj != null)
                     {
-                        DeleteObject(obj);
+                        _manipulationService.DeleteObject(obj);
                     }
                 }
             }
@@ -287,52 +269,52 @@ namespace TerrainTools.EditorHistory
             _handleEvents = true;
 
             // Hack to handle brush tools without using injection >>>
-            if ( _recordMouse && _batch?.Count > 0 && !_inputService.MainMouseButtonHeld )
+            if (_recordMouse && _batch?.Count > 0 && !_inputService.MainMouseButtonHeld)
             {
-                if( LogLevel > HistoryLog.None) 
+                if (LogLevel > HistoryLog.None)
                     Utils.Log("Input: MainMouseButtonUp");
                 PrintHistoryToLog();
                 FinishAndStartNewBatch();
                 PrintHistoryToLog();
             }
             // <<< 
-            else if (_inputService.IsKeyDown("UndoTerrainFast"))
+            else if (_inputService.IsKeyDown("ExtraTerrainTools.UndoTerrainFast"))
             {
-                if( LogLevel > HistoryLog.None) 
+                if (LogLevel > HistoryLog.None)
                     Utils.Log("Input: UndoTerrainFast");
                 PrintHistoryToLog();
                 Undo(FastStep);
                 PrintHistoryToLog();
                 return true;
             }
-            else if (_inputService.IsKeyDown("UndoTerrain"))
+            else if (_inputService.IsKeyDown("ExtraTerrainTools.UndoTerrain"))
             {
-                if( LogLevel > HistoryLog.None) 
+                if (LogLevel > HistoryLog.None)
                     Utils.Log("Input: UndoTerrain");
                 PrintHistoryToLog();
                 Undo(NormalStep);
                 PrintHistoryToLog();
                 return true;
             }
-            else if (_inputService.IsKeyDown("RedoTerrainFast"))
+            else if (_inputService.IsKeyDown("ExtraTerrainTools.RedoTerrainFast"))
             {
-                if( LogLevel > HistoryLog.None) 
+                if (LogLevel > HistoryLog.None)
                     Utils.Log("Input: RedoTerrainFast");
                 PrintHistoryToLog();
                 Redo(FastStep);
                 PrintHistoryToLog();
                 return true;
             }
-            else if (_inputService.IsKeyDown("RedoTerrain"))
+            else if (_inputService.IsKeyDown("ExtraTerrainTools.RedoTerrain"))
             {
-                if( LogLevel > HistoryLog.None) 
+                if (LogLevel > HistoryLog.None)
                     Utils.Log("Input: RedoTerrain");
                 PrintHistoryToLog();
                 Redo(NormalStep);
                 PrintHistoryToLog();
                 return true;
             }
-            
+
             return false;
         }
 
@@ -356,7 +338,7 @@ namespace TerrainTools.EditorHistory
                 }
 
                 tuple = new(elem.ObjectEvent.PrefabName, elem.ObjectEvent.Placement.Coordinates);
-                if( prevOcc.ContainsKey(tuple) )
+                if (prevOcc.ContainsKey(tuple))
                 {
                     cleaned[prevOcc[tuple]] = elem;
                 }
@@ -387,7 +369,7 @@ namespace TerrainTools.EditorHistory
         private void FinishAndStartNewBatch()
         {
             FinishBatch();
-            
+
             _batch = new();
         }
 
@@ -398,30 +380,30 @@ namespace TerrainTools.EditorHistory
 
             Utils.Log("History: {0} Now: {1}", _history.Count, _history.Now);
             int i = 0;
-            
+
             if (LogLevel == HistoryLog.History)
                 return;
 
-            foreach( var batch in _history )
-            {   
+            foreach (var batch in _history)
+            {
                 Utils.LogIndented(1, "index: {0}, count: {1}", i, batch.Count);
-                
+
                 if (LogLevel == HistoryLog.Item)
                     PrintBatchToLog(batch, 2);
-                    
+
                 i++;
             }
         }
 
-        private void PrintBatchToLog( List<HistoryEntry> batch, int indents = 0 )
+        private void PrintBatchToLog(List<HistoryEntry> batch, int indents = 0)
         {
             int j = 0;
-                
+
             foreach (var item in batch)
             {
                 if (item.IsTerrainEvent)
                 {
-                    Utils.LogIndented( indents, "Terrain - ind: {0}, coord: {1}, from: {2}, to: {3}, set: {4}",
+                    Utils.LogIndented(indents, "Terrain - ind: {0}, coord: {1}, from: {2}, to: {3}, set: {4}",
                         j,
                         item.TerrainEvent.Change.Coordinates,
                         item.TerrainEvent.Change.From,
@@ -431,252 +413,320 @@ namespace TerrainTools.EditorHistory
                 }
                 if (item.IsObjectEvent)
                 {
-                    Utils.LogIndented( indents, "Object - ind: {0}, set: {1}, prefab: {2}, at: {3} rot: {4} flipped: {5} growth: {6}", 
-                        j, 
+                    Utils.LogIndented(indents, "Object - ind: {0}, set: {1}, prefab: {2}, at: {3} rot: {4} flipped: {5} growth: {6}",
+                        j,
                         item.ObjectEvent.IsSet,
-                        item.ObjectEvent.PrefabName, 
+                        item.ObjectEvent.PrefabName,
                         item.ObjectEvent.Placement.Coordinates,
                         item.ObjectEvent.Placement.Orientation,
                         item.ObjectEvent.Placement.FlipMode.IsFlipped,
                         item.ObjectEvent.Growth
                     );
                 }
-                                    
+
                 j++;
             }
         }
 
-        private bool PlaceObject(string prefabName, Placement placement, float growth)
-        {
-            var prefab = _prefabNameMapper.GetPrefab(prefabName).GetComponentFast<BlockObjectSpec>();
-            var placer = _placerService.GetMatchingPlacer(prefab);
-            if (!_blockValidator.BlocksValid(prefab, placement))
-                return false;
-
-            placer.Place(prefab, placement);
-
-            var blockObject = GetObjectAt(prefabName, placement.Coordinates);
-            if (blockObject != null)
-            {
-                var growable = blockObject.GetComponentFast<Growable>();
-                if (growable != null && growth >= 0)
+        /* Moved to TerrainToolsManipulationService
+                private bool PlaceObject(string prefabName, Placement placement, float growth)
                 {
-                    growable.IncreaseGrowthProgress(growth);
-                }
-            }
+                    var prefab = _prefabNameMapper.GetPrefab(prefabName).GetComponentFast<BlockObjectSpec>();
+                    var placer = _placerService.GetMatchingPlacer(prefab);
+                    if (!_blockValidator.BlocksValid(prefab, placement))
+                        return false;
 
-            return true;
-        }
+                    placer.Place(prefab, placement);
 
-        private void DeleteObject( BlockObject obj )
-        {
-            var waterSource = obj.GetComponentFast<WaterSource>();
-            var entity = obj.GetComponentFast<EntityComponent>();
-
-            if( waterSource != null)
-                waterSource.DeleteEntity();
-            
-            obj.DeleteEntity();        
-
-            _entityService.Delete(entity);
-        }
-
-        private BlockObject GetObjectAt(string name, Vector3Int coord)
-        {
-            foreach (var obj in _blockService.GetObjectsAt(coord))
-            {
-                if( obj.GetComponentFast<PrefabSpec>().PrefabName == name ) 
-                {
-                    return obj;
-                }
-            }
-            return null;
-        }
-
-        private List<HistoryEntry> SimplifyChanges( List<HistoryEntry> batch )
-        {
-            // New voxel terrain code - Update 7+
-
-            // Find the state of the terrain prior to and after the batch change
-            Dictionary<Vector3Int, bool> preChangeStateMap = new();
-            Dictionary<Vector3Int, bool> postChangeStateMap = new();
-            Dictionary<Vector2Int, int> changeColumnFloor = new();
-            Dictionary<Vector2Int, int> changeColumnTop = new();
-
-            if (LogLevel == HistoryLog.Simplification)
-            {        
-                Utils.Log("SimplifyChanges - Pre-simplify - batchsize: {0}", batch.Count);
-                PrintBatchToLog(batch, 1);
-            }
-
-            Vector3Int coord = new();
-            foreach (var entry in batch)
-            {
-                if (entry.IsTerrainEvent)
-                {
-                    var change = entry.TerrainEvent.Change;
-                    coord.x = change.Coordinates.x;
-                    coord.y = change.Coordinates.y;
-
-                    if (!changeColumnFloor.ContainsKey(change.Coordinates) || change.From < changeColumnFloor[change.Coordinates])
+                    var blockObject = GetObjectAt(prefabName, placement.Coordinates);
+                    if (blockObject != null)
                     {
-                        changeColumnFloor[change.Coordinates] = change.From;
-                    }
-
-                    if (!changeColumnTop.ContainsKey(change.Coordinates) || change.To > changeColumnTop[change.Coordinates])
-                    {
-                        changeColumnTop[change.Coordinates] = change.To;
-                    }
-
-                    // Brute method, could be more performant?
-                    for (int i = change.From; i <= change.To; i++)
-                    {
-                        coord.z = i;
-                        if (!preChangeStateMap.ContainsKey(coord))
+                        var growable = blockObject.GetComponentFast<Growable>();
+                        if (growable != null && growth >= 0)
                         {
-                            preChangeStateMap[coord] = !change.SetTerrain;
+                            growable.IncreaseGrowthProgress(growth);
                         }
-
-                        postChangeStateMap[coord] = change.SetTerrain;
                     }
-                }
-            }
 
-            if (LogLevel == HistoryLog.Simplification)
-            {
-                Utils.Log("SimplifyChanges - Mid-simplify");
-                Utils.Log("preChangeStateMap = ");
-                foreach (var item in preChangeStateMap)
-                {
-                    Utils.LogIndented(1, "Key: {0},{1},{2} Value: {3}", item.Key.x, item.Key.y, item.Key.z, item.Value);
+                    return true;
                 }
 
-                Utils.Log("postChangeStateMap = ");
-                foreach (var item in postChangeStateMap)
+                private void DeleteObject(BlockObject obj)
                 {
-                    Utils.LogIndented(1, "Key: {0},{1},{2} Value: {3}", item.Key.x, item.Key.y, item.Key.z, item.Value);
+                    var waterSource = obj.GetComponentFast<WaterSource>();
+                    var entity = obj.GetComponentFast<EntityComponent>();
+
+                    if (waterSource != null)
+                        waterSource.DeleteEntity();
+
+                    obj.DeleteEntity();
+
+                    _entityService.Delete(entity);
                 }
 
-                Utils.Log("changeColumnFloor = ");
-                foreach (var item in changeColumnFloor)
+                private BlockObject GetObjectAt(string name, Vector3Int coord)
                 {
-                    Utils.LogIndented(1, "Key: {0},{1} Value: {2}", item.Key.x, item.Key.y, item.Value);
-                }
-
-                Utils.Log("changeColumnTop = ");
-                foreach (var item in changeColumnTop)
-                {
-                    Utils.LogIndented(1, "Key: {0},{1} Value: {2}", item.Key.x, item.Key.y, item.Value);
-                }
-            }
-
-            // Filter out entries and replace them with contigious terrain columns that have changed
-            // Object type changes are left in place
-            HashSet<Vector2Int> visited = new();
-            List<HistoryEntry> simplified = new();
-            foreach (var entry in batch)
-            {
-                if (entry.IsTerrainEvent)
-                {
-                    // Check if terrain change event should be kept, we only care about the state before and after
-                    var change = entry.TerrainEvent.Change;
-                    if (!visited.Contains(change.Coordinates))
+                    foreach (var obj in _blockService.GetObjectsAt(coord))
                     {
-                        // This is a new column, parse this column once only
-                        visited.Add(change.Coordinates);
-
-                        for (int z = changeColumnFloor[change.Coordinates]; z <= changeColumnTop[change.Coordinates]; z++)
+                        if (obj.GetComponentFast<PrefabSpec>().PrefabName == name)
                         {
+                            return obj;
+                        }
+                    }
+                    return null;
+                }
+        */
+        private List<HistoryEntry> SimplifyChanges(List<HistoryEntry> batch)
+        {
+            try
+            {
+                // New voxel terrain code - Update 7+
+
+                // Find the state of the terrain prior to and after the batch change
+                Dictionary<Vector3Int, bool> preChangeStateMap = new();
+                Dictionary<Vector3Int, bool> postChangeStateMap = new();
+                Dictionary<Vector2Int, int> changeColumnFloor = new();
+                Dictionary<Vector2Int, int> changeColumnTop = new();
+
+                if (LogLevel == HistoryLog.Simplification)
+                {
+                    Utils.Log("SimplifyChanges - Pre-simplify - batchsize: {0}", batch.Count);
+                    PrintBatchToLog(batch, 1);
+                }
+
+                Vector3Int coord = new();
+                try
+                {
+                    foreach (var entry in batch)
+                    {
+                        if (entry.IsTerrainEvent)
+                        {
+                            var change = entry.TerrainEvent.Change;
                             coord.x = change.Coordinates.x;
                             coord.y = change.Coordinates.y;
-                            coord.z = z;
 
-                            if (preChangeStateMap[coord] == postChangeStateMap[coord])
-                                continue;
-
-                            bool isSet = postChangeStateMap[coord];
-                            int to = z;
-                            while (to <= changeColumnTop[change.Coordinates] && preChangeStateMap[coord] != postChangeStateMap[coord])
+                            try
                             {
-                                to++;
-                                coord.z = to;
+                                if (!changeColumnFloor.ContainsKey(change.Coordinates) || change.From < changeColumnFloor[change.Coordinates])
+                                {
+                                    changeColumnFloor[change.Coordinates] = change.From;
+                                }
+                            }
+                            catch (KeyNotFoundException e)
+                            {
+                                e.Data.Add("Dictionary", "changeColumnFloor");
+                                throw e;
                             }
 
-                            simplified.Add(
-                                new HistoryEntry(
-                                    new TerrainHeightChangeEventArgs(
-                                        new TerrainHeightChange(change.Coordinates, z, to - 1, isSet)
-                                    )
-                                )
-                            );
+                            try
+                            {
+                                if (!changeColumnTop.ContainsKey(change.Coordinates) || change.To > changeColumnTop[change.Coordinates])
+                                {
+                                    changeColumnTop[change.Coordinates] = change.To;
+                                }
+                            }
+                            catch (KeyNotFoundException e)
+                            {
+                                e.Data.Add("Dictionary", "changeColumnTop");
+                                throw e;
+                            }
 
-                            z = to;
+                            // Brute method, could it be more performant?
+                            for (int i = change.From; i <= change.To; i++)
+                            {
+                                coord.z = i;
+                                if (!preChangeStateMap.ContainsKey(coord))
+                                {
+                                    preChangeStateMap[coord] = !change.SetTerrain;
+                                }
+
+                                postChangeStateMap[coord] = change.SetTerrain;
+                            }
                         }
                     }
                 }
-                else
+                catch (KeyNotFoundException e)
                 {
-                    // Object events are simply added back in
-                    simplified.Add(entry);
+                    e.Data.Add("Context", "While building pre/post change state maps");
+                    throw e;
                 }
-            }
 
-            if (LogLevel == HistoryLog.Simplification)
-            {        
-                Utils.Log("SimplifyChanges - Post-simplify - batchsize: {0}", simplified.Count);
-                PrintBatchToLog(simplified, 1);
-            }
-
-            /* Old 2.5D terrain code - Up to update 6
-            Dictionary<Vector2Int, int> oldest = new();
-            Dictionary<Vector2Int, int> newest = new();
-
-            TerrainColumnChangedEventArgs evt;
-            foreach (var item in batch)
-            {
-                if (item.IsTerrainEvent)
+                if (LogLevel == HistoryLog.Simplification)
                 {
-                    evt = item.TerrainEvent;
-                    if (!oldest.ContainsKey(evt.Change.Coordinates))
+                    Utils.Log("SimplifyChanges - Mid-simplify");
+                    Utils.Log("preChangeStateMap = ");
+                    foreach (var item in preChangeStateMap)
                     {
-                        oldest[evt.Change.Coordinates] = evt.Change.From;
+                        Utils.LogIndented(1, "Key: {0},{1},{2} Value: {3}", item.Key.x, item.Key.y, item.Key.z, item.Value);
                     }
-                    newest[evt.Change.Coordinates] = evt.Change.To;
-                }
-            }
 
-            Dictionary<Vector2Int, bool> visited = new();
-
-            // Order in batch is important, hence cannot rely on Dictionary.ToList() to filter
-            List<HistoryEntry> simplified = new();
-            foreach (var item in batch)
-            {
-                if (item.IsTerrainEvent)
-                {
-                    // Check if terrain event should be kept, only oldest height and newest height value for each point is kept
-                    evt = item.TerrainEvent;
-                    if( !visited.ContainsKey(evt.Change.Coordinates) )
+                    Utils.Log("postChangeStateMap = ");
+                    foreach (var item in postChangeStateMap)
                     {
-                        visited[evt.Change.Coordinates] = true;
-                        simplified.Add(
-                            new HistoryEntry(
-                                new TerrainColumnChangedEventArgs(
-                                    new TerrainHeightChange( evt.Change.Coordinates, oldest[evt.Change.Coordinates], newest[evt.Change.Coordinates], evt.Change.SetTerrain )
-                                )
-                            )
-                        );
+                        Utils.LogIndented(1, "Key: {0},{1},{2} Value: {3}", item.Key.x, item.Key.y, item.Key.z, item.Value);
+                    }
+
+                    Utils.Log("changeColumnFloor = ");
+                    foreach (var item in changeColumnFloor)
+                    {
+                        Utils.LogIndented(1, "Key: {0},{1} Value: {2}", item.Key.x, item.Key.y, item.Value);
+                    }
+
+                    Utils.Log("changeColumnTop = ");
+                    foreach (var item in changeColumnTop)
+                    {
+                        Utils.LogIndented(1, "Key: {0},{1} Value: {2}", item.Key.x, item.Key.y, item.Value);
                     }
                 }
-                else 
-                {
-                    // Object events are simply added back in
-                    simplified.Add(item);
-                }
-            }
-            */
 
-            return simplified;
+                // Filter out entries and replace them with contigious terrain columns that have changed
+                // Object type changes are left in place
+                HashSet<Vector2Int> visited = new();
+                List<HistoryEntry> simplified = new();
+
+                try
+                {
+                    foreach (var entry in batch)
+                    {
+                        if (entry.IsTerrainEvent)
+                        {
+                            // Check if terrain change event should be kept, we only care about the state before and after
+                            var change = entry.TerrainEvent.Change;
+                            if (!visited.Contains(change.Coordinates))
+                            {
+                                // change.Coordinates represents a new terrain column, parse the entire column at once and once only
+                                visited.Add(change.Coordinates);
+                                try
+                                {
+                                    for (int z = changeColumnFloor[change.Coordinates]; z <= changeColumnTop[change.Coordinates]; z++)
+                                    {
+                                        coord.x = change.Coordinates.x;
+                                        coord.y = change.Coordinates.y;
+                                        coord.z = z;
+
+                                        try
+                                        {
+                                            if (!preChangeStateMap.ContainsKey(coord) || !postChangeStateMap.ContainsKey(coord) || preChangeStateMap[coord] == postChangeStateMap[coord])
+                                                continue;
+                                        }
+                                        catch (KeyNotFoundException e)
+                                        {
+                                            if (!e.Data.Contains("Dictionary"))
+                                            {
+                                                if (preChangeStateMap.ContainsKey(coord))
+                                                    e.Data.Add("Dictionary", "preChangeStateMap");
+                                                else
+                                                    e.Data.Add("Dictionary", "postChangeStateMap");
+                                            }
+
+                                            e.Data.Add("Context 2", "While comparing pre/post change state maps");
+                                            throw e;
+                                        }
+
+                                        bool isSet = postChangeStateMap[coord];
+                                        int to = z;
+                                        try
+                                        {
+                                            while (to <= changeColumnTop[change.Coordinates] && preChangeStateMap.ContainsKey(coord) && postChangeStateMap.ContainsKey(coord) && preChangeStateMap[coord] != postChangeStateMap[coord])
+                                            {
+                                                to++;
+                                                coord.z = to;
+                                            }
+                                        }
+                                        catch (KeyNotFoundException e)
+                                        {
+                                            if (!e.Data.Contains("Dictionary"))
+                                            {
+                                                if (!changeColumnTop.ContainsKey(change.Coordinates))
+                                                    e.Data.Add("Dictionary", "changeColumnTop");
+                                                else
+                                                {
+                                                    e.Data.Add("changeColumnFloor[change.Coordinates]", changeColumnFloor[change.Coordinates]);
+                                                    e.Data.Add("changeColumnTop[change.Coordinates]", changeColumnTop[change.Coordinates]);
+                                                    if (preChangeStateMap.ContainsKey(coord))
+                                                        e.Data.Add("Dictionary", "postChangeStateMap");
+                                                    else
+                                                        e.Data.Add("Dictionary", "preChangeStateMap");
+                                                }
+
+                                                e.Data.Add("to", to);
+                                                e.Data.Add("z", z);
+                                                e.Data.Add("Context 2", "While find column upper limit");
+                                            }
+
+                                            throw e;
+                                        }
+
+                                        simplified.Add(
+                                            new HistoryEntry(
+                                                new TerrainHeightChangeEventArgs(
+                                                    new TerrainHeightChange(change.Coordinates, z, to - 1, isSet)
+                                                )
+                                            )
+                                        );
+
+                                        z = to;
+                                    }
+                                }
+                                catch (KeyNotFoundException e)
+                                {
+                                    e.Data.Add("change.Coordinates", change.Coordinates);
+                                    e.Data.Add("change.From", change.From);
+                                    e.Data.Add("change.To", change.To);
+                                    e.Data.Add("change.SetTerrain", change.SetTerrain);
+                                    if (!e.Data.Contains("Dictionary"))
+                                    {
+                                        if (changeColumnFloor.ContainsKey(change.Coordinates))
+                                            e.Data.Add("Dictionary", "changeColumnTop");
+                                        else
+                                            e.Data.Add("Dictionary", "changeColumnFloor");
+                                    }
+
+                                    throw e;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Object events are simply added back in
+                            simplified.Add(entry);
+                        }
+                    }
+                }
+                catch (KeyNotFoundException e)
+                {
+                    e.Data.Add("Context", "While building simplified batch");
+                    e.Data.Add("Result", simplified);
+                    throw e;
+                }
+
+                if (LogLevel == HistoryLog.Simplification)
+                {
+                    Utils.Log("SimplifyChanges - Post-simplify - batchsize: {0}", simplified.Count);
+                    PrintBatchToLog(simplified, 1);
+                }
+
+                return simplified;
+            }
+            catch (KeyNotFoundException e)
+            {
+                Utils.LogError("KeyNotFoundException in EditorHistoryService.SimplifyChanges");
+                Utils.LogError("Exception Data:");
+                foreach (DictionaryEntry data in e.Data)
+                {
+                    Utils.LogError("{0} = {1}", data.Key, data.Value);
+                }
+
+                Utils.LogError("Source batch:");
+                PrintBatchToLog(batch, 1);
+                if (e.Data.Contains("Result"))
+                {
+                    Utils.LogError("Simplified batch:");
+                    PrintBatchToLog((List<HistoryEntry>)e.Data["Result"], 1);
+                }
+
+                throw e;
+            }
         }
     }
 }
-

@@ -2,10 +2,10 @@ namespace TerrainTools
 {
     public class TerrainToolDefinition
     {
-        public ITerrainTool Tool { get; }
-        public ITerrainToolFragment ToolPanel {get; }
+        public TerrainTool Tool { get; }
+        public TerrainToolFragment ToolPanel { get; }
 
-        public TerrainToolDefinition(ITerrainTool tool, ITerrainToolFragment toolPanel)
+        public TerrainToolDefinition(TerrainTool tool, TerrainToolFragment toolPanel)
         {
             Tool = tool;
             ToolPanel = toolPanel;

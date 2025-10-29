@@ -10,6 +10,7 @@ namespace TerrainTools
 {
     public class TerrainToolPanelFactory : ILoadableSingleton
     {
+        #region TextFormat
         [Flags]
         public enum TextFormat
         {
@@ -17,83 +18,48 @@ namespace TerrainTools
             Bold = 1,
             Italic = 2
         }
+        #endregion
 
-        private readonly VisualElementLoader _loader;
+        #region Boilerplate
+        // private readonly VisualElementLoader _loader;
         private readonly DropdownItemsSetter _dropdownItemsSetter;
-        private static readonly string brushShapePath = "MapEditor/ToolPanel/BrushShapePanel";
-        private static readonly string brushSizePath = "MapEditor/ToolPanel/BrushSizePanel";
-        private static readonly string thumbnailPath = "MapEditor/ToolPanel/ThumbnailCapturingPanel";
-        private static readonly string spawningPath = "MapEditor/ToolPanel/NaturalResourceSpawningBrushPanel";
-        private static readonly string togglePath = "MapEditor/ToolPanel/ToolPanelToggle";
-        private static readonly string newMapBoxPath = "Options/NewMapBox";
-        private static readonly string dropdownPath = "Game/BatchControl/DropdownBatchControlRowItem";
+        private readonly DropdownListDrawer _dropdownListDrawer;
+
+        // private static readonly string brushShapePath = "MapEditor/ToolPanel/BrushShapePanel";
+        // private static readonly string brushSizePath = "MapEditor/ToolPanel/BrushSizePanel";
+        // private static readonly string thumbnailPath = "MapEditor/ToolPanel/ThumbnailCapturingPanel";
+        // private static readonly string spawningPath = "MapEditor/ToolPanel/NaturalResourceSpawningBrushPanel";
+        // private static readonly string togglePath = "MapEditor/ToolPanel/ToolPanelToggle";
+        // private static readonly string newMapBoxPath = "Options/NewMapBox";
+        // private static readonly string dropdownPath = "Game/BatchControl/DropdownBatchControlRowItem";
+        // private static readonly string mapSelection = "Common/MapSelection";
+
 
         public TerrainToolPanelFactory(
-            VisualElementLoader visualElementLoader,
-            DropdownItemsSetter dropdownItemsSetter
+            // VisualElementLoader visualElementLoader,
+            DropdownItemsSetter dropdownItemsSetter,
+            DropdownListDrawer dropdownListDrawer
         )
         {
-            _loader = visualElementLoader;
+            // _loader = visualElementLoader;
             _dropdownItemsSetter = dropdownItemsSetter;
+            _dropdownListDrawer = dropdownListDrawer;
         }
 
         public void Load()
         {
-
         }
+        #endregion
 
-        private VisualElement LoadVisualElement(string path)
+        #region Containers
+        public NineSliceVisualElement MakeToolPanel(FlexDirection flexDirection = FlexDirection.Column, Align alignItems = Align.Center, Justify justifyContent = Justify.FlexStart)
         {
-            return _loader.LoadVisualElement(path);
-        }
-        private VisualElement LoadChild(string assetPath, int[] indexPath)
-        {
-            int i = 0;
-            try
-            {
-                VisualElement parent = LoadVisualElement(assetPath);
-                VisualElement child = null;
-                foreach (var step in indexPath)
-                {
-                    child = parent[step];
-                    parent = child;
-                    i++;
-                }
+            var container = new NineSliceVisualElement();
+            container.AddToClassList("tool-panel-item--map-editor");
+            container.AddToClassList("bg-box--green");
 
-                return child;
-            }
-            catch (IndexOutOfRangeException)
-            {
-                throw new ArgumentOutOfRangeException("indexPath", "Invalid child index at position " + i);
-            }
-        }
-        private VisualElement LoadChild(string assetPath, string childName)
-        {
-            var root = LoadVisualElement(assetPath);
-            VisualElement child = root.Q<VisualElement>(childName);
-            return child;
-        }
-        private VisualElement LoadChild<T>(string assetPath) where T : VisualElement
-        {
-            var root = LoadVisualElement(assetPath);
-            VisualElement child = root.Q<T>();
-            return child;
-        }
-
-        public FlexDirection FlexHorizontal { get; } = FlexDirection.Row;
-        public FlexDirection FlexVertical { get; } = FlexDirection.Column;
-
-        public Align AlignStart { get; } = Align.FlexStart;
-        public Align AlignCenter { get; } = Align.Center;
-        public Align AlignEnd { get; } = Align.FlexEnd;
-        public Align AlignStretch { get; } = Align.Stretch;
-
-        public VisualElement MakeTemplatePanel(FlexDirection flexDirection = FlexDirection.Column, Align alignItems = Align.Center, Justify justifyContent = Justify.FlexStart)
-        {
-            VisualElement template = LoadVisualElement(brushShapePath);
-            template.Clear();
-            SetElementLayout(template, flexDirection, alignItems, justifyContent);
-            return template;
+            SetElementLayout(container, flexDirection, alignItems, justifyContent);
+            return container;
         }
 
         public VisualElement MakeContainer(FlexDirection flexDirection = FlexDirection.Column, Align alignItems = Align.Center, Justify justifyContent = Justify.FlexStart)
@@ -102,18 +68,22 @@ namespace TerrainTools
             SetElementLayout(container, flexDirection, alignItems, justifyContent);
             return container;
         }
-
-        public void SetElementLayout(VisualElement container, FlexDirection flexDirection, Align alignItems, Justify justifyContent)
+        public NineSliceVisualElement MakeDescriptionContainer(FlexDirection flexDirection = FlexDirection.Column, Align alignItems = Align.Center, Justify justifyContent = Justify.FlexStart)
         {
-            container.style.flexDirection = flexDirection;
-            container.style.alignItems = alignItems;
-            container.style.justifyContent = justifyContent;
+            var container = new NineSliceVisualElement();
+            container.AddToClassList("map-selection__description-background");
+            SetElementLayout(container, flexDirection, alignItems, justifyContent);
+            return container;
         }
 
+        #endregion
+
+        #region Labels and Textfields
         public Label MakeLabel(string text)
         {
-            int[] path = { 0, 0 };
-            var label = LoadChild(brushShapePath, path) as Label;
+            Label label = new();
+            label.AddToClassList("game-text-normal");
+            label.AddToClassList("tool-panel-item__label");
             label.text = text;
             return label;
         }
@@ -130,49 +100,11 @@ namespace TerrainTools
             label.style.unityTextAlign = alignAnchor;
             return label;
         }
-
-        private Button MakeButton(string assetPath, string childName, string text, Action action)
-        {
-            var button = LoadChild(assetPath, childName) as Button;
-            button.text = text;
-            button.RegisterCallback<ClickEvent>(delegate
-            {
-                action();
-            });
-            return button;
-        }
-
-        private Button MakeButton<T>(string assetPath, string childName, string text, Action<Button, T> action, T arg)
-        {
-            var button = LoadChild(assetPath, childName) as Button;
-            button.text = text;
-            button.RegisterCallback<ClickEvent>(delegate
-            {
-                action(button, arg);
-            });
-            return button;
-        }
-
-        public Button MakeButton<T>(string text, Action<Button, T> action, T arg)
-        {
-            return MakeButton(thumbnailPath, "Update", text, action, arg);
-        }
-        public Button MakeButton(string text, Action action)
-        {
-            return MakeButton(thumbnailPath, "Update", text, action);
-        }
-        public Button MakeMinusButton(Action action)
-        {
-            return MakeButton(brushSizePath, "Minus", "", action);
-        }
-        public Button MakePlusButton(Action action)
-        {
-            return MakeButton(brushSizePath, "Plus", "", action);
-        }
-
         public TextField MakeTextField(Action changeAction = null)
         {
-            var textField = LoadChild(newMapBoxPath, "SizeXField") as TextField;
+            NineSliceTextField textField = new();
+            textField.AddToClassList("text-field");
+
             if (changeAction != null)
             {
                 textField.RegisterValueChangedCallback(delegate
@@ -183,6 +115,138 @@ namespace TerrainTools
 
             return textField;
         }
+        #endregion
+
+        #region Buttons
+        private Button CreateTextButton(string text)
+        {
+            LocalizableButton button = new();
+            button.AddToClassList("button-game");
+            button.AddToClassList("game-text-normal");
+            button.SetMargin(2);
+            button.SetPadding(4, 8);
+            button.text = text;
+            return button;
+        }
+
+        public Button MakeTextButton<T>(string text, Action<Button, T> action, T arg)
+        {
+            var button = CreateTextButton(text);
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                action(button, arg);
+            });
+            return button;
+        }
+
+        public Button MakeTextButton<T>(string text, Action<Button> action)
+        {
+            var button = CreateTextButton(text);
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                action(button);
+            });
+            return button;
+        }
+
+        public Button MakeTextButton(string text, Action action)
+        {
+            var button = CreateTextButton(text);
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                action();
+            });
+            return button;
+        }
+
+        private Button CreateSquareButton()
+        {
+            Button button = new();
+            button.AddToClassList("button-square");
+            return button;
+        }
+
+        public Button MakeMinusButton(Action action)
+        {
+            var button = CreateSquareButton();
+            button.AddToClassList("button-minus");
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                action();
+            });
+            return button;
+        }
+        public Button MakePlusButton(Action action)
+        {
+            var button = CreateSquareButton();
+            button.AddToClassList("button-plus");
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                action();
+            });
+            return button;
+        }
+
+        public VisualElement MakeMinimizerButton(VisualElement controlledContainer)
+        {
+            return MakeMinimizerButton(new List<VisualElement>() { controlledContainer });
+        }
+
+        /// <summary>
+        /// The first element's current display style is used as marker for correct DisplayStyle to apply
+        /// </summary>
+        /// <param name="elements"></param>
+        /// <returns></returns>
+        public VisualElement MakeMinimizerButton(IEnumerable<VisualElement> elements)
+        {
+            var root = MakeContainer(FlexDirection.Row, Align.Center, Justify.FlexEnd);
+            var scale = new Scale(new Vector2(0.75f, 0.75f));
+            var button = CreateSquareButton();
+            button.AddToClassList("button-arrow-down");
+
+            button.style.scale = scale;
+            button.style.flexGrow = 0;
+            button.style.flexShrink = 0;
+
+            button.RegisterCallback<ClickEvent>(delegate
+            {
+                // Use the first element as holder of the state for all affected elements
+                var current = elements.First().style.display;
+                if (current == DisplayStyle.None)
+                {
+                    button.RemoveFromClassList("button-arrow-up");
+                    button.AddToClassList("button-arrow-down");
+                }
+                else
+                {
+                    button.RemoveFromClassList("button-arrow-down");
+                    button.AddToClassList("button-arrow-up");
+                }
+
+                // Update all managed elements
+                foreach (var e in elements)
+                {
+                    e.style.display = current == DisplayStyle.None ? DisplayStyle.Flex : DisplayStyle.None;
+                }
+            });
+
+            root.Add(button);
+            return root;
+        }
+        #endregion
+
+        #region Toggles
+        private Toggle CreateToggle(string text, bool value)
+        {
+            Toggle toggle = new();
+            toggle.AddToClassList("game-toggle");
+            toggle.AddToClassList("tool-panel-toggle");
+            toggle.text = text;
+            toggle.value = value;
+
+            return toggle;
+        }
+
         /// <summary>
         /// Returns a container element for a toggle button.
         /// The actual Toggle can be accessed by querying the container for it using .Q&lt;Toggle&gt;>()
@@ -193,9 +257,7 @@ namespace TerrainTools
         /// <returns></returns>
         public Toggle MakeToggle(string text, Action toggleAction, bool defaultState = false)
         {
-            Toggle toggle = LoadVisualElement(togglePath).Q<Toggle>();
-            toggle.text = text;
-            toggle.value = defaultState;
+            var toggle = CreateToggle(text, defaultState);
             toggle.RegisterValueChangedCallback(delegate
             {
                 toggleAction();
@@ -206,9 +268,7 @@ namespace TerrainTools
 
         public Toggle MakeToggle(string text, Action<Toggle> toggleAction, bool defaultState = false)
         {
-            Toggle toggle = LoadVisualElement(togglePath).Q<Toggle>();
-            toggle.text = text;
-            toggle.value = defaultState;
+            var toggle = CreateToggle(text, defaultState);
             toggle.RegisterValueChangedCallback(delegate
             {
                 toggleAction(toggle);
@@ -216,12 +276,9 @@ namespace TerrainTools
 
             return toggle;
         }
+        #endregion
 
-        // public ImageToggle MakeImageToggle(Texture on, Texture off, Action<bool> toggleAction, bool defaultState = false)
-        // {
-        //     return new ImageToggle(on, off, toggleAction, defaultState);
-        // }
-
+        #region Sliders
         /// <summary>
         /// Returns a container element with a Slider "Slider" and a Label "SliderValue".
         /// Update of the value label is NOT handled automatically.
@@ -232,9 +289,22 @@ namespace TerrainTools
         /// <returns></returns>
         public VisualElement MakeSlider(string label, Action changeAction, float min = 0f, float max = 100f, float? initial = null)
         {
-            int[] path = { 1 };
-            VisualElement container = LoadChild(spawningPath, path);
-            Slider slider = container.Q("Slider") as Slider;
+            // int[] path = { 1 };
+            // VisualElement container = LoadChild(spawningPath, path);
+            // Slider slider = container.Q("Slider") as Slider;
+            VisualElement container = new();
+            container.AddToClassList("resource-spawning-brush-panel__slider-wrapper");
+
+            Slider slider = new() { name = "Slider" };
+            slider.AddToClassList("tool-panel-slider");
+
+            Label sliderValue = new() { name = "SliderValue" };
+            sliderValue.AddToClassList("game-text-normal");
+            sliderValue.AddToClassList("resource-spawning-brush-panel__slider-value");
+
+            container.Add(slider);
+            container.Add(sliderValue);
+
             slider.label = label;
             slider.value = initial.HasValue ? Mathf.Clamp((float)initial, min, max) : min;
             slider.lowValue = min;
@@ -246,71 +316,49 @@ namespace TerrainTools
 
             return container;
         }
+        #endregion
 
+
+        #region Dropdowns
+        private (VisualElement, Dropdown) CreateDropdown()
+        {
+            NineSliceVisualElement row = new();
+            row.AddToClassList("batch-control-box__row-item-group");
+            row.AddToClassList("dropdown-batch-control-row-item");
+
+            Dropdown dropdown = new()
+            {
+                name = "Dropdown"
+            };
+            dropdown.Initialize(_dropdownListDrawer);
+
+            row.Add(dropdown);
+
+            return (row, dropdown);
+        }
         public VisualElement MakeDropdown(IDropdownProvider dropdownProvider)
         {
-            VisualElement visualElement = _loader.LoadVisualElement(dropdownPath);
-            Dropdown dropdown = visualElement.Q<Dropdown>("Dropdown");
+            var (row, dropdown) = CreateDropdown();
             _dropdownItemsSetter.SetItems(dropdown, dropdownProvider);
-            // _tooltipRegistrar.Register(dropdown, () => GetTooltipText(dropdownProvider));
-
-            return visualElement;
+            return row;
         }
 
-        public VisualElement MakeDropdown(IExtendedDropdownProvider dropdownProvider, bool reverse = false, bool displayItemText = true)
+        public VisualElement MakeDropdown(IExtendedDropdownProvider dropdownProvider)
         {
-            VisualElement visualElement = _loader.LoadVisualElement(dropdownPath);
-            Dropdown dropdown = visualElement.Q<Dropdown>("Dropdown");
-            // dropdown.Q("Selection").style.flexDirection = reverse ? FlexDirection.RowReverse : FlexDirection.Row;
+            var (row, dropdown) = CreateDropdown();
             _dropdownItemsSetter.SetItems(dropdown, dropdownProvider);
 
-            //SetDropdownItems(dropdown, dropdownProvider, reverse, displayItemText);
-            // _tooltipRegistrar.Register(dropdown, () => GetTooltipText(dropdownProvider));
-
-            return visualElement;
+            return row;
         }
+        #endregion
 
-        public Button MakeMinimizerButton(VisualElement controlledContainer)
+        #region Private members
+        private void SetElementLayout(VisualElement container, FlexDirection flexDirection, Align alignItems, Justify justifyContent)
         {
-            return MakeMinimizerButton(new List<VisualElement>() { controlledContainer });
+            container.style.flexDirection = flexDirection;
+            container.style.alignItems = alignItems;
+            container.style.justifyContent = justifyContent;
         }
-
-        public VisualElement MakeMinimizerButtonRow(VisualElement controlledContainer)
-        {
-            return MakeMinimizerButtonRow(new List<VisualElement>() { controlledContainer });
-        }
-
-        /// <summary>
-        /// The first element's current display style is used as marker for correct DisplayStyle to apply
-        /// </summary>
-        /// <param name="elements"></param>
-        /// <returns></returns>
-        public Button MakeMinimizerButton(IEnumerable<VisualElement> elements)
-        {
-            return MakeMinusButton(delegate
-            {
-                // Use the first element as holder of the state for all affected elements
-                var current = elements.First().style.display;
-                foreach (var e in elements)
-                {
-                    e.style.display = current == DisplayStyle.None ? DisplayStyle.Flex : DisplayStyle.None;
-                }
-            });
-        }
-
-        /// <summary>
-        /// The first element's current display style is used as marker for correct DisplayStyle to apply
-        /// </summary>
-        /// <param name="elements"></param>
-        /// <returns></returns>
-        public VisualElement MakeMinimizerButtonRow(IEnumerable<VisualElement> elements)
-        {
-            var root = MakeContainer(FlexDirection.Row, Align.Center, Justify.FlexEnd);
-            var button = MakeMinimizerButton(elements);
-            button.style.scale = new Scale(new Vector2(0.5f, 0.5f));
-            button.style.flexGrow = 0;
-            root.Add(button);
-            return root;
-        }
+        #endregion
     }
 }

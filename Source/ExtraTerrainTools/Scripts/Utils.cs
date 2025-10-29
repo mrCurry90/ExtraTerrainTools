@@ -3,15 +3,17 @@ using Timberborn.AssetSystem;
 using System.Linq;
 using System.Text;
 
-namespace TerrainTools {
+namespace TerrainTools
+{
     internal class Utils
     {
         private static string _PREFIX = "Mod: TerrainTools - ";
 
-        public static void Log( string text ) {
+        public static void Log(string text)
+        {
             UnityEngine.Debug.Log(_PREFIX + text);
         }
-        
+
         public static void Log(string text, params object[] args)
         {
             Log(string.Format(text, args));
@@ -21,7 +23,7 @@ namespace TerrainTools {
         {
             UnityEngine.Debug.LogError(_PREFIX + text);
         }
-        
+
         public static void LogError(string text, params object[] args)
         {
             LogError(string.Format(text, args));
@@ -41,15 +43,20 @@ namespace TerrainTools {
             LogVisualTree(node, 0);
         }
 
-        private static void LogVisualTree( VisualElement node, int level)
+        private static void LogVisualTree(VisualElement node, int level, int siblingIndex = 0)
         {
             string indent = "", tab = "	";
             for (int i = 0; i < level; i++)
                 indent += tab;
 
-            Log( indent + node.GetType() + " - " + node.name );
+            Log(indent + node.GetType() + " - " + node.name + " - Index " + siblingIndex);
+
+            siblingIndex = 0;
             foreach (var c in node.Children())
-                LogVisualTree( c, level + 1 );
+            {
+                LogVisualTree(c, level + 1, siblingIndex);
+                siblingIndex++;
+            }
         }
 
         public static void LogAssetsInPath<T>(IAssetLoader _assetLoader, string path) where T : UnityEngine.Object

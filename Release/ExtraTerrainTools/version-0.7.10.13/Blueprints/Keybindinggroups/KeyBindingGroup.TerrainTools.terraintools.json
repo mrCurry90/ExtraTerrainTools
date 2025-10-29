@@ -1,0 +1,7 @@
+{
+    "KeyBindingGroupSpec": {
+        "Id": "TerrainTools",
+        "Order": 900,
+        "LocKey": "TerrainTools.KeyBindingGroup.Label"
+    }
+}

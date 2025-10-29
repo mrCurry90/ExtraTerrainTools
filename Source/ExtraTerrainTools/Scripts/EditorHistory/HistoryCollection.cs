@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace TerrainTools.EditorHistory
 {
@@ -8,15 +7,17 @@ namespace TerrainTools.EditorHistory
     {
         protected List<T> _items;
         public int Now { get; protected set; }
-        public int Count{ get { return _items.Count; } }
-        public bool IsEmpty{ get { return Count == 0; } }
+        public int Count { get { return _items.Count; } }
+        public int Capacity { get; set; }
+        public bool IsEmpty { get { return Count == 0; } }
         protected static int First = 0;
-        protected int Last{ get { return Count - 1; } }   
+        protected int Last { get { return Count - 1; } }
 
-        public HistoryCollection()
+        public HistoryCollection(int capacity = 500)
         {
             _items = new();
             Now = 0;
+            Capacity = capacity;
         }
 
         public void Insert(T item)
@@ -25,12 +26,18 @@ namespace TerrainTools.EditorHistory
             {
                 _items.RemoveRange(Now, Count - Now);
             }
+
             _items.Add(item);
+
+            if (Count > 0 && Count > Capacity)
+            {
+                _items.RemoveAt(0);
+            }
 
             Now = Count;
         }
 
-        public T RemoveAt( int index )
+        public T RemoveAt(int index)
         {
             T temp = _items[index];
             _items.RemoveAt(index);
@@ -42,8 +49,8 @@ namespace TerrainTools.EditorHistory
             _items.Clear();
             Now = 0;
         }
-        
-        public List<T> Undo( int steps )
+
+        public List<T> Undo(int steps)
         {
             int before = Now;
             Now -= steps;
@@ -53,30 +60,29 @@ namespace TerrainTools.EditorHistory
             List<T> list = new(steps);
             for (int i = before - 1; i >= Now; i--)
             {
-                list.Add( _items[i] );
-            }            
+                list.Add(_items[i]);
+            }
 
             return list;
         }
 
-        public List<T> Redo( int steps )
+        public List<T> Redo(int steps)
         {
             int before = Now;
             Now += steps;
             if (Now > Count)
                 Now = Count;
 
-
             List<T> list = new(steps);
             for (int i = before; i < Now; i++)
             {
-                list.Add( _items[i] );
+                list.Add(_items[i]);
             }
 
             return list;
         }
 
-        public T Peek( int index )
+        public T Peek(int index)
         {
             return _items[index];
         }

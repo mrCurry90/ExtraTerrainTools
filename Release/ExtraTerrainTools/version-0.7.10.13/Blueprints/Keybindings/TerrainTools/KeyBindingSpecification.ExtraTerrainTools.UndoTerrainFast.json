@@ -1,0 +1,15 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.UndoTerrainFast",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.FastUndo",
+		"Order": 102,
+		"AllowOtherModifiers": false,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/z",
+		"InputModifiers": "Ctrl, Shift",
+		"Unchangeable": false
+	}
+}

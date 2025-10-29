@@ -13,10 +13,11 @@ using Timberborn.TerrainQueryingSystem;
 using Timberborn.TerrainSystem;
 using Timberborn.ToolSystem;
 using UnityEngine;
+using System.Linq;
 
 namespace TerrainTools.SmoothingBrush
 {
-    public class SmoothingBrushTool : ITerrainTool, IInputProcessor, ILoadableSingleton
+    public class SmoothingBrushTool : TerrainTool, IInputProcessor, ILoadableSingleton
     {
         public override string Icon { get; } = "SmoothingToolIcon";
 
@@ -24,7 +25,8 @@ namespace TerrainTools.SmoothingBrush
 
         private static readonly float MarkerYOffset = 0.02f;
         private static readonly Color PositiveTileColor = new(0f, 1f, 0f, 0.7f);
-        private static readonly Color BlockedTileColor = new(0.5f, 0.5f, 0.5f, 0.7f);
+        private static readonly Color BlockedTileColor = new(1f, 0.2f, 0.2f, 0.7f);
+        private static readonly Color SampleTileColor = new(0.5f, 0.5f, 0.5f, 0.35f);
 
         private readonly InputService _inputService;
         private readonly ITerrainService _terrainService;
@@ -36,7 +38,7 @@ namespace TerrainTools.SmoothingBrush
 
         private MeshDrawer _meshDrawer;
         private ToolDescription _toolDescription;
-        private Vector2Int _center;
+        private Vector3Int _center;
 
         public int Size { get; set; }
         public int SampleSize { get; set; } = 1;
@@ -103,7 +105,7 @@ namespace TerrainTools.SmoothingBrush
 
                 if (HasRayHitTerrain(ray, out Vector3Int center))
                 {
-                    _center = center.XY();
+                    _center = center;
 
                     if (_timer == 0)
                     {
@@ -127,7 +129,7 @@ namespace TerrainTools.SmoothingBrush
 
                     if (HasRayHitTerrain(ray, out Vector3Int center))
                     {
-                        _center = center.XY();
+                        _center = center;
                         DrawPreviewTiles();
                     }
                 }
@@ -141,14 +143,17 @@ namespace TerrainTools.SmoothingBrush
             int height;
             float newHeight;
             List<Tuple<Vector3Int, int>> updated = new();
-
-            foreach (Vector2Int coord in GetNeighbors(_center))
+            Vector3Int coord3;
+            foreach (Vector2Int coord in GetNeighbors(_center.XY()))
             {
-                height = _terrainService.CellHeight(coord);
+                coord3 = (Vector3Int)coord;
+                coord3.z = _center.z;
+
+                height = _terrainService.GetTerrainHeight(coord3);
                 if (_blockService.AnyObjectAtColumn(coord, height, _terrainService.Size.z))
                     continue;
 
-                newHeight = SampleHeight(coord);
+                newHeight = SampleHeight(coord3);
                 newHeight = height + Force * (newHeight - height);
 
                 updated.Add(
@@ -181,38 +186,48 @@ namespace TerrainTools.SmoothingBrush
 
         private void DrawPreviewTiles()
         {
+            HashSet<Vector2Int> visitedCoords = new();
             Vector3Int drawCoord;
-            foreach (Vector2Int coord in GetNeighbors(_center))
+
+            // Draw affected coordinates
+            foreach (Vector2Int coord in GetNeighbors(_center.XY(), includeSamples: false))
             {
-                drawCoord = coord.XYZ();
-                drawCoord.z = _terrainService.CellHeight(coord);
+                visitedCoords.Add(coord);
+
+                drawCoord = coord.ToVector3Int(_center.z);
+                drawCoord.z = _terrainService.GetTerrainHeight(drawCoord);
                 bool hasBlocks = _blockService.AnyObjectAtColumn(coord, drawCoord.z, _terrainService.Size.z);
 
                 _meshDrawer.DrawAtCoordinates(drawCoord, MarkerYOffset, hasBlocks ? BlockedTileColor : PositiveTileColor);
             }
+
+            // Draw sampled coordinates
+            foreach (Vector2Int coord in GetNeighbors(_center.XY(), includeSamples: true).Where(c => !visitedCoords.Contains(c)))
+            {
+                drawCoord = coord.ToVector3Int(_center.z);
+                drawCoord.z = _terrainService.GetTerrainHeight(drawCoord);
+                _meshDrawer.DrawAtCoordinates(drawCoord, MarkerYOffset, SampleTileColor);
+            }
         }
 
-        private List<Vector2Int> GetNeighbors(Vector2Int coord)
+        private IEnumerable<Vector2Int> GetNeighbors(Vector2Int coord, bool includeSamples = false)
         {
-            List<Vector2Int> selected = new();
-
-            Vector2Int start = new(coord.x - Size, coord.y - Size),
-                        end = new(coord.x + Size + 1, coord.y + Size + 1);
+            int size = includeSamples ? Size + SampleSize : Size;
+            Vector2Int start = new(coord.x - size, coord.y - size),
+                        end = new(coord.x + size + 1, coord.y + size + 1);
 
             for (int y = start.y; y < end.y; y++)
             {
                 for (int x = start.x; x < end.x; x++)
                 {
                     Vector2Int p = new(x, y);
-                    if (Circular && (p - coord).magnitude > Size)
+                    if (Circular && (p - coord).magnitude > size)
                         continue;
 
                     if (_terrainService.Contains(p))
-                        selected.Add(p);
+                        yield return p;
                 }
             }
-
-            return selected;
         }
 
         private float GetBrushStrength2(Vector2 point)
@@ -226,11 +241,11 @@ namespace TerrainTools.SmoothingBrush
             return Mathf.Max(0, 1 - Mathf.Pow(x + y, Force));
         }
 
-        private float SampleHeight(Vector2Int coord)
+        private float SampleHeight(Vector3Int coord)
         {
             Vector2Int start = new(coord.x - SampleSize, coord.y - SampleSize),
-                        end = new(coord.x + SampleSize + 1, coord.y + SampleSize + 1),
-                        pos = new();
+                        end = new(coord.x + SampleSize + 1, coord.y + SampleSize + 1);
+            Vector3Int pos = new(0, 0, coord.z);
 
             float sample = 0;
             int n = 0;
@@ -240,7 +255,7 @@ namespace TerrainTools.SmoothingBrush
                 {
                     if (_terrainService.Contains(pos))
                     {
-                        sample += _terrainService.CellHeight(pos);
+                        sample += _terrainService.GetTerrainHeight(pos);
                         n++;
                     }
                 }

@@ -5,7 +5,7 @@ using Timberborn.Localization;
 
 namespace TerrainTools.NoiseGenerator
 {
-    public class NoiseGeneratorTool : ITerrainTool, ILoadableSingleton
+    public class NoiseGeneratorTool : TerrainTool, ILoadableSingleton
     {
         private readonly string _keyToolTitle = "TerrainTools.Heightmap.Tool.Title"; // Heightmap Generator
         private static readonly string _keyWarningText = "TerrainTools.Heightmap.Tool.Warning"; // Changes affect the entire map.
