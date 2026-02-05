@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System;
-using TerrainTools.EditorHistory;
 using Timberborn.BlockSystem;
 using Timberborn.CameraSystem;
 using Timberborn.Common;
@@ -11,9 +10,10 @@ using Timberborn.Rendering;
 using Timberborn.SingletonSystem;
 using Timberborn.TerrainQueryingSystem;
 using Timberborn.TerrainSystem;
-using Timberborn.ToolSystem;
 using UnityEngine;
 using System.Linq;
+using Timberborn.UndoSystem;
+using Timberborn.ToolSystemUI;
 
 namespace TerrainTools.SmoothingBrush
 {
@@ -34,7 +34,7 @@ namespace TerrainTools.SmoothingBrush
         private readonly TerrainPicker _terrainPicker;
         private readonly CameraService _cameraService;
         private readonly MarkerDrawerFactory _markerDrawerFactory;
-        private readonly EditorHistoryService _historyService;
+        private readonly IUndoRegistry _undoRegistry;
 
         private MeshDrawer _meshDrawer;
         private ToolDescription _toolDescription;
@@ -55,7 +55,7 @@ namespace TerrainTools.SmoothingBrush
         public SmoothingBrushTool(
             InputService inputService, ITerrainService terrainService, IBlockService blockService,
             TerrainPicker terrainPicker, CameraService cameraService, MarkerDrawerFactory markerDrawerFactory,
-            EditorHistoryService historyService, ILoc loc
+            IUndoRegistry undoRegistry, ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
@@ -64,7 +64,7 @@ namespace TerrainTools.SmoothingBrush
             _terrainPicker = terrainPicker;
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;
-            _historyService = historyService;
+            _undoRegistry = undoRegistry;
 
             Size = 3;
         }
@@ -78,7 +78,7 @@ namespace TerrainTools.SmoothingBrush
 
         }
 
-        public override ToolDescription Description()
+        public override ToolDescription DescribeTool()
         {
             return _toolDescription;
         }
@@ -91,6 +91,7 @@ namespace TerrainTools.SmoothingBrush
         public override void Exit()
         {
             _inputService.RemoveInputProcessor(this);
+            _undoRegistry.CommitStack();
         }
 
         public bool ProcessInput()
@@ -98,11 +99,6 @@ namespace TerrainTools.SmoothingBrush
             Ray ray = _cameraService.ScreenPointToRayInGridSpace(_inputService.MousePosition);
             if (_inputService.MainMouseButtonHeld && !_inputService.MouseOverUI)
             {
-                if (_inputService.MainMouseButtonDown)
-                {
-                    _historyService.BatchStart();
-                }
-
                 if (HasRayHitTerrain(ray, out Vector3Int center))
                 {
                     _center = center;
@@ -124,7 +120,7 @@ namespace TerrainTools.SmoothingBrush
                 {
                     if (_inputService.MainMouseButtonUp)
                     {
-                        _historyService.BatchStop();
+                        _undoRegistry.CommitStack();
                     }
 
                     if (HasRayHitTerrain(ray, out Vector3Int center))

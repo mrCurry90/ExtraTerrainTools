@@ -1,7 +1,9 @@
-using System;
+using DescriptionBuilder = Timberborn.ToolSystemUI.ToolDescription.Builder;
+using InputDescriber = TerrainTools.Cloning.CloneToolInputDescriber;
+using Object = UnityEngine.Object;
 using System.Collections.Generic;
 using System.Linq;
-using TerrainTools.EditorHistory;
+using System;
 using Timberborn.BlockSystem;
 using Timberborn.CameraSystem;
 using Timberborn.Coordinates;
@@ -15,12 +17,11 @@ using Timberborn.Ruins;
 using Timberborn.SingletonSystem;
 using Timberborn.TerrainQueryingSystem;
 using Timberborn.TerrainSystem;
-using Timberborn.ToolSystem;
+using Timberborn.ToolSystemUI;
+using Timberborn.UndoSystem;
 using Timberborn.WaterSourceSystem;
 using UnityEngine;
-using DescriptionBuilder = Timberborn.ToolSystem.ToolDescription.Builder;
-using Object = UnityEngine.Object;
-using InputDescriber = TerrainTools.Cloning.CloneToolInputDescriber;
+using Timberborn.Stockpiles;
 
 namespace TerrainTools.Cloning
 {
@@ -56,7 +57,7 @@ namespace TerrainTools.Cloning
         private readonly TerrainPicker _terrainPicker;
         private readonly IBlockService _blockService;
         private readonly ITerrainService _terrainService;
-        private readonly EditorHistoryService _historyService;
+        private readonly IUndoRegistry _undoRegistry;
         private readonly TerrainToolsManipulationService _manipulationService;
         private readonly KeyBindingRegistry _keyBindingRegistry;
         private readonly MarkerDrawerFactory _markerDrawerFactory;
@@ -95,7 +96,7 @@ namespace TerrainTools.Cloning
         private int _selectionBoxHeight = 0;
 
         // Selection buffer
-        private Selection _selectionBuffer = new();
+        private Selection _selectionBuffer;
         public int ObjectCount { get => _selectionBuffer == null ? 0 : _selectionBuffer.ObjectCount; }
         public int TerrainCount { get => _selectionBuffer == null ? 0 : _selectionBuffer.TerrainCount; }
 
@@ -119,7 +120,7 @@ namespace TerrainTools.Cloning
             TerrainPicker terrainPicker,
             IBlockService blockService,
             ITerrainService terrainService,
-            EditorHistoryService historyService,
+            IUndoRegistry undoRegistry,
             KeyBindingRegistry keyBindingRegistry,
             TerrainToolsManipulationService manipulationService,
             MarkerDrawerFactory markerDrawerFactory,
@@ -132,10 +133,12 @@ namespace TerrainTools.Cloning
             _terrainPicker = terrainPicker;
             _blockService = blockService;
             _terrainService = terrainService;
-            _historyService = historyService;
+            _undoRegistry = undoRegistry;
             _keyBindingRegistry = keyBindingRegistry;
             _manipulationService = manipulationService;
             _markerDrawerFactory = markerDrawerFactory;
+
+            _selectionBuffer = new(_terrainService, _blockService, _manipulationService);
         }
 
         public void Load()
@@ -152,7 +155,7 @@ namespace TerrainTools.Cloning
             _smallBlockDrawer = _markerDrawerFactory.CreateSmallBlockTileDrawer();
             _largeBlockDrawer = _markerDrawerFactory.CreateLargeBlockTileDrawer();
         }
-        public override ToolDescription Description()
+        public override ToolDescription DescribeTool()
         {
             return _toolDescription;
         }
@@ -162,15 +165,13 @@ namespace TerrainTools.Cloning
             _inputService.AddInputProcessor(this);
 
             _selectionBox ??= Instantiate(_selectionBoxPrefab).GetComponent<SelectionBox>();
-            // Utils.Log($"Enter _toolPhase = {_toolPhase}");
+
             if (_toolPhase < CloneToolPhase.MoveApply)
             {
-                // Utils.Log($"Selectionbox inactive");
                 _selectionBox.Active = false;
             }
             else
             {
-                // Utils.Log($"Selection box active");
                 _selectionBox.Active = true;
                 ApplyAdjustmentsToBox();
             }
@@ -180,18 +181,19 @@ namespace TerrainTools.Cloning
         {
             _inputService.RemoveInputProcessor(this);
 
-            // Utils.Log($"Exit _toolPhase = {_toolPhase}");
 
             // Reset the tool if no confirmed selection exists
             if (_toolPhase < CloneToolPhase.MoveApply)
             {
-                // Utils.Log("Resetting tool");
                 ResetTool();
             }
             else
             {
                 _selectionBox.Active = false;
             }
+
+            // Commit changes to editor history
+            _undoRegistry.CommitStack();
         }
         public bool ProcessInput()
         {
@@ -231,7 +233,7 @@ namespace TerrainTools.Cloning
 
         private void ResetTool()
         {
-            _selectionBuffer?.Clear();
+            _selectionBuffer.Clear();
             _selectedPoints.Clear();
             _selectionBox.Active = false;
             _selectionBox.Color = _selectModeFrameColor;
@@ -485,13 +487,11 @@ namespace TerrainTools.Cloning
             }
             else if (_inputService.IsKeyDown(InputDescriber.KEY_CUT))
             {
-                _historyService.BatchStart();
                 Cut();
                 return true;
             }
             else if (_inputService.IsKeyDown(InputDescriber.KEY_PASTE))
             {
-                _historyService.BatchStart();
                 Paste();
                 return true;
             }
@@ -511,11 +511,6 @@ namespace TerrainTools.Cloning
                 return true;
             }
 
-            if (_inputService.IsKeyUp(InputDescriber.KEY_CUT) || _inputService.IsKeyUp(InputDescriber.KEY_PASTE))
-            {
-                _historyService.BatchStop();
-            }
-
             return false;
         }
 
@@ -524,10 +519,9 @@ namespace TerrainTools.Cloning
             Copy();
 
             // Perform cut
-            // _historyService.BatchStart();
             foreach (var objectData in _selectionBuffer.GetObjects())
             {
-                var obj = _manipulationService.GetFirstObjectAt(objectData.PrefabName, objectData.Coordinates);
+                var obj = _manipulationService.GetFirstObjectAt(objectData.TemplateName, objectData.Coordinates);
                 if (obj != null)
                     _manipulationService.DeleteObject(obj);
             }
@@ -538,21 +532,23 @@ namespace TerrainTools.Cloning
                     _terrainService.UnsetTerrain(coord);
 
             }
-            // _historyService.BatchStop();
+
+            // Commit changes to editor history
+            _undoRegistry.CommitStack();
         }
 
         private void Copy()
         {
-            _selectionBuffer.Scan(_terrainService, _blockService, _selectedPoints.First(), _selectedPoints.Last(), includeStacked: IncludeStackedObjects, includeAir: IncludeAirBlocks);
+            _selectionBuffer.Scan(_selectedPoints.First(), _selectedPoints.Last(), includeStacked: IncludeStackedObjects, includeAir: IncludeAirBlocks);
             SelectedContentChanged?.Invoke();
         }
 
         private void Paste()
         {
-            foreach (var (coord, isTerrain) in _selectionBuffer.GetTerrain())
+            foreach (var (coord, shouldAddTerrain) in _selectionBuffer.GetTerrain())
             {
                 // Add terrain back in, ignoring restrictions
-                if (isTerrain)
+                if (shouldAddTerrain)
                     _terrainService.SetTerrain(coord);
                 else if (IncludeAirBlocks)
                 {
@@ -569,8 +565,36 @@ namespace TerrainTools.Cloning
             // Paste stored objects
             foreach (var objectData in _selectionBuffer.GetObjects().OrderBy(o => o.Coordinates.z))
             {
-                _manipulationService.PlaceObject(objectData.PrefabName, new(objectData.Coordinates, objectData.Orientation, objectData.FlipMode), objectData.Growth);
+                try
+                {
+                    // If block object requires full depth (i.e. watersource or underground ruin) pasting incorrectly can cause crash.
+                    // TODO: Add validation
+                    _manipulationService.PlaceObject(
+                        objectData.TemplateName,
+                        new(objectData.Coordinates, objectData.Orientation, objectData.FlipMode),
+                        (placed) =>
+                        {
+                            if (objectData.Growth >= 0 && placed.TryGetComponent<Growable>(out var growable))
+                            {
+                                growable.IncreaseGrowthProgress(objectData.Growth);
+                            }
+
+                            if (objectData.GoodId != "" && placed.TryGetComponent<Stockpile>(out var stockpile))
+                            {
+                                _manipulationService.Set(stockpile, objectData.GoodId, objectData.GoodAmount);
+                            }
+                        }
+                    );
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Utils.Log(objectData.ToString());
+                    throw ex;
+                }
             }
+
+            // Commit changes to editor history
+            _undoRegistry.CommitStack();
         }
 
         private void Flip()
@@ -611,15 +635,11 @@ namespace TerrainTools.Cloning
 
         private void DrawTerrainPreview()
         {
-            foreach (var (coord, setToTerrain) in _selectionBuffer.GetTerrain())
+            foreach (var (coord, shouldAddTerrain) in _selectionBuffer.GetTerrain())
             {
-                if (_terrainService.Underground(coord))
+                if (_terrainService.Underground(coord) || shouldAddTerrain)
                 {
-                    _largeBlockDrawer.DrawAtCoordinates(coord, verticalOffset: PREVIEW_VERT_OFFSET, setToTerrain ? _terrainAddColor : _terrainRemColor);
-                }
-                else if (setToTerrain)
-                {
-                    _largeBlockDrawer.DrawAtCoordinates(coord, verticalOffset: PREVIEW_VERT_OFFSET, setToTerrain ? _terrainAddColor : _terrainRemColor);
+                    _largeBlockDrawer.DrawAtCoordinates(coord, verticalOffset: PREVIEW_VERT_OFFSET, shouldAddTerrain ? _terrainAddColor : _terrainRemColor);
                 }
             }
         }
@@ -628,20 +648,18 @@ namespace TerrainTools.Cloning
         {
             foreach (var obj in _selectionBuffer.GetObjects())
             {
-                var spec = _manipulationService.GetBlockObjectSpec(obj.PrefabName);
+                var spec = _manipulationService.GetBlockObjectSpec(obj.TemplateName);
                 if (spec != null)
                 {
                     var blocks = spec.GetBlocks();
-                    int width = blocks.Size.x % 2 == 0 ? 2 : 1;
                     foreach (var relCoord in blocks.GetOccupiedCoordinates())
                     {
-                        var oriented = obj.Orientation.Transform(obj.FlipMode.Transform(relCoord, width));
-                        // Utils.Log($"relCoord: {relCoord}");
-                        // Utils.Log($"oriented: {oriented}");
+                        var oriented = blocks.Transform(relCoord, new(obj.Coordinates, obj.Orientation, obj.FlipMode));
                         _smallBlockDrawer.DrawAtCoordinates(
-                            obj.Coordinates + oriented,
+                            oriented,
+                            // obj.Coordinates + oriented,
                             verticalOffset: PREVIEW_VERT_OFFSET,
-                            GetObjectColor(obj.PrefabName)
+                            GetObjectColor(obj.TemplateName)
                         );
                     }
                 }
@@ -651,14 +669,14 @@ namespace TerrainTools.Cloning
         private Color GetObjectColor(string prefabName)
         {
             var service = _manipulationService;
-            var prefab = _manipulationService.GetPrefabSpec(prefabName);
-            if (service.GetPrefabComponent<RuinSpec>(prefab))
+            var template = _manipulationService.GetTemplateSpec(prefabName);
+            if (service.GetSpec<RuinSpec>(template) != null)
                 return _objectRuinColor;
-            if (service.GetPrefabComponent<GrowableSpec>(prefab))
+            if (service.GetSpec<GrowableSpec>(template) != null)
                 return _objectGrowableColor;
-            if (service.GetPrefabComponent<WaterSourceSpec>(prefab))
+            if (service.GetSpec<WaterSourceSpec>(template) != null)
             {
-                var contaminationSpec = service.GetPrefabComponent<WaterSourceContaminationSpec>(prefab);
+                var contaminationSpec = service.GetSpec<WaterSourceContaminationSpec>(template);
                 return contaminationSpec.DefaultContamination > 0f ? _objectBadWaterColor : _objectWaterColor;
             }
 
@@ -668,7 +686,7 @@ namespace TerrainTools.Cloning
         private bool HasRayHitSelection(Ray ray)
         {
             ray = CoordinateSystem.WorldToGrid(ray);
-            if (Physics.Raycast(ray, out RaycastHit hitInfo))
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, Physics.IgnoreRaycastLayer))
             {
                 if (hitInfo.collider != null)
                 {
@@ -717,14 +735,10 @@ namespace TerrainTools.Cloning
 
         private void ApplyAdjustmentsToBox()
         {
-            _selectionBuffer?.UpdatePosition(_selectedPoints.First(), _selectedPoints.Last());
+            _selectionBuffer.UpdatePosition(_selectedPoints.First(), _selectedPoints.Last());
             _selectionBox.Set(
-                GridCenterToWorld(
-                    _selectionBuffer.Transform(_selectedPoints.First())
-                ),
-                GridCenterToWorld(
-                    _selectionBuffer.Transform(_selectedPoints.Last())
-                )
+                GridCenterToWorld(_selectionBuffer.Start),
+                GridCenterToWorld(_selectionBuffer.End)
             );
         }
 

@@ -509,7 +509,7 @@ namespace TerrainTools.PathPainter
 
                     LinePoint last = _controlPoints.Last();
                     Vector3 point = last.transform.position + (last.transform.position - previous.transform.position);
-                    last.transform.LookAt(point);                    
+                    last.transform.LookAt(point);
                     return;
             }
         }

@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
-using TerrainTools.EditorHistory;
 using Timberborn.CameraSystem;
 using Timberborn.Common;
 using Timberborn.GridTraversing;
@@ -11,11 +10,12 @@ using Timberborn.Rendering;
 using Timberborn.SingletonSystem;
 using Timberborn.TerrainQueryingSystem;
 using Timberborn.TerrainSystem;
-using Timberborn.ToolSystem;
 using Unity.Mathematics;
 using UnityEngine.Splines;
 using UnityEngine;
 using Timberborn.Localization;
+using Timberborn.UndoSystem;
+using Timberborn.ToolSystemUI;
 
 namespace TerrainTools.PathPainter
 {
@@ -35,11 +35,13 @@ namespace TerrainTools.PathPainter
         private readonly InputService _inputService;
         private readonly ITerrainService _terrainService;
         private readonly TerrainPicker _terrainPicker;
+        private readonly TerrainToolsManipulationService _manipulationService;
         private readonly CameraService _cameraService;
 
         private readonly MarkerDrawerFactory _markerDrawerFactory;
-        private readonly EditorHistoryService _historyService;
+        private readonly IUndoRegistry _undoRegistry;
         private readonly SplineDrawer _splineDrawer;
+
 
         private Color _nearTileColor = new(0f, 1f, 1f, 1f);
         private Color _farTileColor = new(1f, 1f, 0f, 1f);
@@ -152,16 +154,17 @@ namespace TerrainTools.PathPainter
         private Color[] _debugColors;
 
         public PathPainterTool(
-            InputService inputService, ITerrainService terrainService, TerrainPicker terrainPicker, CameraService cameraService,
-            MarkerDrawerFactory markerDrawerFactory, EditorHistoryService historyService, SplineDrawer splineDrawer, ILoc loc
+            InputService inputService, ITerrainService terrainService, TerrainPicker terrainPicker, TerrainToolsManipulationService manipulationService,
+            CameraService cameraService, MarkerDrawerFactory markerDrawerFactory, IUndoRegistry undoRegistry, SplineDrawer splineDrawer, ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
             _terrainService = terrainService;
             _terrainPicker = terrainPicker;
+            _manipulationService = manipulationService;
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;
-            _historyService = historyService;
+            _undoRegistry = undoRegistry;
             _splineDrawer = splineDrawer;
         }
 
@@ -287,7 +290,7 @@ namespace TerrainTools.PathPainter
             _splineDrawer.Clear();
         }
 
-        public override ToolDescription Description()
+        public override ToolDescription DescribeTool()
         {
             return _toolDescription;
         }
@@ -302,6 +305,7 @@ namespace TerrainTools.PathPainter
         {
             _inputService.RemoveInputProcessor(this);
             ToggleHelpers(false);
+            _undoRegistry.CommitStack();
         }
 
         public bool ProcessInput()
@@ -346,7 +350,7 @@ namespace TerrainTools.PathPainter
             {
                 ray = _cameraService.ScreenPointToRayInWorldSpace(_inputService.MousePosition);
                 bool hit = false;
-                if (Physics.Raycast(ray, out RaycastHit hitInfo))
+                if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, Physics.IgnoreRaycastLayer))
                 {
                     if (hitInfo.collider != null)
                     {
@@ -414,8 +418,6 @@ namespace TerrainTools.PathPainter
 
         public void Apply()
         {
-            _historyService.BatchStart();
-
             Easer leftEaser = LeftNearHeight < LeftFarHeight ? _leftSlope.ToEaser() : _leftSlope.Inverse().ToEaser();
             Easer rightEaser = RightNearHeight < RightFarHeight ? _rightSlope.ToEaser() : _rightSlope.Inverse().ToEaser();
 
@@ -460,10 +462,11 @@ namespace TerrainTools.PathPainter
                 Vector3Int adjustCoord = new(coordinates.x, coordinates.y, Mathf.FloorToInt(curveData.coord.y));
                 adjustCoord.z = _terrainService.GetTerrainHeight(adjustCoord);
 
-                _terrainService.AdjustTerrain(adjustCoord, adjustBy);
+                if (_manipulationService.CanAdjustTerrain(adjustCoord, adjustBy))
+                    _manipulationService.AdjustTerrain(adjustCoord, adjustBy);
             }
 
-            _historyService.BatchStop();
+            _undoRegistry.CommitStack();
         }
 
         private bool HasRayHitTerrain(Ray ray, out Vector3Int where)

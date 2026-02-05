@@ -1,18 +1,20 @@
 using Timberborn.Localization;
 using Timberborn.ToolSystem;
+using Timberborn.ToolSystemUI;
 
 namespace TerrainTools
 {
-    public abstract class TerrainTool : Tool
+    public abstract class TerrainTool : ITool, IToolDescriptor
     {
         protected readonly ILoc _loc;
 
         public virtual string Icon { get; } = "";
 
-        public void SetToolGroup(ToolGroup toolGroup)
-        {
-            base.ToolGroup = toolGroup;
-        }
+        public abstract void Enter();
+
+        public abstract void Exit();
+
+        public abstract ToolDescription DescribeTool();
 
         private TerrainTool() { }
 

@@ -1,0 +1,7 @@
+{
+  "ToolGroupSpec": {
+    "Id": "ExtraTerrainTools.ToolGroup",
+    "DisplayNameLocKey": "TerrainTools.ToolGroupButton.Label",
+    "Icon": "Sprites/BottomBar/TerrainToolsIcon"
+  }
+}

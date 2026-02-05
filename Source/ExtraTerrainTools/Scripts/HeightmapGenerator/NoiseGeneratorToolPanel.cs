@@ -126,7 +126,7 @@ namespace TerrainTools.NoiseGenerator
             var header = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
             _loadingLabel = _elementFactory.MakeLabel(_loc.T(_keyIdleText));
             var options = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
-            var footer = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch);
+            var footer = _elementFactory.MakeContainer(FlexDirection.Column, Align.Stretch, Justify.Center);
 
             _loadingLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             _loadingLabel.style.marginTop = 5;
@@ -338,8 +338,8 @@ namespace TerrainTools.NoiseGenerator
             generateRow.Add(_generateButton);
 
             // Update Mode toggle
-            _modeToggle = _elementFactory.MakeToggle(_loc.T(_keyCbClearObjectsLabel), UpdateHintText);
-            _modeToggle.style.alignSelf = Align.FlexEnd;
+            _modeToggle = _elementFactory.MakeToggle(_loc.T(_keyCbClearObjectsLabel), UpdateHintText, true);
+            _modeToggle.SetEnabled(false);
             generateRow.Add(_modeToggle);
 
             // Reset button

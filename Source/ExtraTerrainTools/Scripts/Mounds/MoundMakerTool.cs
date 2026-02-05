@@ -1,7 +1,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System;
 using Timberborn.BlockSystem;
 using Timberborn.CameraSystem;
@@ -13,10 +12,11 @@ using Timberborn.Rendering;
 using Timberborn.SingletonSystem;
 using Timberborn.TerrainQueryingSystem;
 using Timberborn.TerrainSystem;
-using Timberborn.ToolSystem;
 using Timberborn.BlockObjectPickingSystem;
 using UnityEngine;
 using Timberborn.Localization;
+using Timberborn.UndoSystem;
+using Timberborn.ToolSystemUI;
 
 namespace TerrainTools.MoundMaker
 {
@@ -43,7 +43,6 @@ namespace TerrainTools.MoundMaker
         public static string ReseedKeybind => _reseedKeybind;
         public static string FlipModeKeybind => _flipModeKeybind;
 
-
         private static readonly float MarkerYOffset = 0.02f;
         private static readonly Color[] raiseHeightColors = {
             new(0f, 1f, 0f, 0.7f), // Low = Green
@@ -67,6 +66,9 @@ namespace TerrainTools.MoundMaker
         private readonly CameraService _cameraService;
         private readonly MarkerDrawerFactory _markerDrawerFactory;
         private readonly BlockObjectRaycaster _blockObjectRaycaster;
+        private readonly IUndoRegistry _undoRegistry;
+        private readonly TerrainToolsManipulationService _manipulationService;
+        private readonly MapSize _mapSize;
 
         private MeshDrawer _meshDrawer;
         private ToolDescription _toolDescription;
@@ -76,7 +78,7 @@ namespace TerrainTools.MoundMaker
         private string _seed = null;
         public event EventHandler<string> SeedUpdated;
 
-        private int _maxTerrainHeight = GetMaxHeight();
+        public int MaxTerrainHeight => _mapSize.MaxMapEditorTerrainHeight;
 
         public int PeakHeight { get; set; }
         public float MinWidthScale { get; set; }
@@ -98,6 +100,9 @@ namespace TerrainTools.MoundMaker
             CameraService cameraService,
             MarkerDrawerFactory markerDrawerFactory,
             BlockObjectRaycaster blockObjectRaycaster,
+            IUndoRegistry undoRegistry,
+            MapSize mapSize,
+            TerrainToolsManipulationService manipulationService,
             ILoc loc
         ) : base(loc)
         {
@@ -108,13 +113,16 @@ namespace TerrainTools.MoundMaker
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;
             _blockObjectRaycaster = blockObjectRaycaster;
-
-            PeakHeight = _maxTerrainHeight;
-            MaxAdjust = _maxTerrainHeight;
+            _undoRegistry = undoRegistry;
+            _manipulationService = manipulationService;
+            _mapSize = mapSize;
         }
 
         public void Load()
         {
+            PeakHeight = MaxTerrainHeight;
+            MaxAdjust = MaxTerrainHeight;
+
             var _builder = new ToolDescription.Builder(_loc.T(_keyToolTitle));
             _toolDescription = _builder.Build();
 
@@ -122,7 +130,7 @@ namespace TerrainTools.MoundMaker
             _meshDrawer = _markerDrawerFactory.CreateSmallBlockTileDrawer();
         }
 
-        public override ToolDescription Description()
+        public override ToolDescription DescribeTool()
         {
             return _toolDescription;
         }
@@ -141,6 +149,7 @@ namespace TerrainTools.MoundMaker
             ResetSelection();
             _dragging = false;
             _inputService.RemoveInputProcessor(this);
+            _undoRegistry.CommitStack();
         }
 
         public bool ProcessInput()
@@ -329,13 +338,14 @@ namespace TerrainTools.MoundMaker
 
             // Utils.Log("IsEmptyAndStackable - !AnyObjectAt(coord): {0}", !_blockService.AnyObjectAt(coord));
             // Utils.Log("IsEmptyAndStackable - Underground(below): {0}", _terrainService.Underground(below));
-            // Utils.Log("IsEmptyAndStackable - Topobject(below): {0}", _blockService.GetTopObjectAt(below));
+            // Utils.Log("IsEmptyAndStackable - Topobject(below): {0}", _blockService.GetTopObjectComponentAt<BlockObject>(below));
             // Utils.Log("IsEmptyAndStackable - Stackable: {0}", _blockService.GetTopObjectAt(below)?.PositionedBlocks.GetBlock(below).Stackable);
 
             return !_blockService.AnyObjectAt(coord) && (
                 _terrainService.Underground(below)
                 ||
-                _blockService.GetTopObjectAt(below)?.PositionedBlocks?.GetBlock(below).Stackable == BlockStackable.BlockObject
+                // _blockService.GetTopObjectAt(below)?.PositionedBlocks?.GetBlock(below).Stackable == BlockStackable.BlockObject
+                _blockService.GetTopObjectComponentAt<BlockObject>(below)?.PositionedBlocks?.GetBlock(below).Stackable == BlockStackable.BlockObject
             );
         }
 
@@ -362,15 +372,9 @@ namespace TerrainTools.MoundMaker
 
                 if (Raise)
                 {
-                    // height += z;
-                    // if (height > _maxTerrainHeight)
-                    //     height = _maxTerrainHeight;
-
-                    // _terrainService.SetHeight( coord, height );
-
                     // Limit within map editor threshold
-                    if (coord3.z + z > _maxTerrainHeight)
-                        z = _maxTerrainHeight - coord3.z;
+                    if (coord3.z + z > MaxTerrainHeight)
+                        z = MaxTerrainHeight - coord3.z;
 
                     // Cut off below objects
                     if (IsEmptyAndStackable(coord3))
@@ -381,17 +385,16 @@ namespace TerrainTools.MoundMaker
                 }
                 else
                 {
-                    // height -= z;
-                    // if (height < 1)
-                    //     height = 1;
-
-                    // _terrainService.SetHeight(coord, height);
-
                     // UnsetTerrain limits the z to be above min value
                     coord3.z -= 1;
-                    _terrainService.UnsetTerrain(coord3, z);
+                    if (_manipulationService.CanRemoveTerrain(coord3))
+                    {
+                        _terrainService.UnsetTerrain(coord3, z);
+                    }
                 }
             }
+
+            _undoRegistry.CommitStack();
         }
 
         private IEnumerable<Adjustment> GetTerrainAdjustments()
@@ -430,24 +433,18 @@ namespace TerrainTools.MoundMaker
                 {
                     TryGetDistanceToObjectAbove(terrainCoord, adjustZ, out adjustZ);
 
-                    coordinates.z = Mathf.Clamp(coordinates.z + adjustZ, 0, _maxTerrainHeight);
+                    coordinates.z = Mathf.Clamp(coordinates.z + adjustZ, 0, MaxTerrainHeight);
 
                     canApply = IsEmptyAndStackable(terrainCoord);
-                    drawColor = HeightToColor(raiseHeightColors, coordinates.z, terrainCoord.z, _maxTerrainHeight);
+                    drawColor = HeightToColor(raiseHeightColors, coordinates.z, terrainCoord.z, MaxTerrainHeight);
                     drawAt = coordinates;
                 }
                 else
                 {
-                    coordinates.z = Mathf.Clamp(terrainCoord.z - adjustZ, 0, _maxTerrainHeight);
-                    // Utils.Log("_selectionCenter: {0}", _selectionCenter);
-                    // Utils.Log("terrainCoord: {0}", terrainCoord);
-                    // Utils.Log("adjustZ: {0}", adjustZ);
-                    // Utils.Log("Coordinates: {0}", coordinates);
-
-                    canApply = true; //_blockService.AnyObjectAtColumn(coordinates.XY(), coordinates.z, terrainCoord.z);
+                    coordinates.z = Mathf.Clamp(terrainCoord.z - adjustZ, 0, MaxTerrainHeight);
                     drawColor = HeightToColor(lowerHeightColors, coordinates.z, 0, terrainCoord.z);
-                    // Utils.Log("Color: {0}", drawColor);
                     drawAt = new(coordinates.x, coordinates.y, terrainCoord.z);
+                    canApply = _manipulationService.CanRemoveTerrain(drawAt);
                 }
 
                 if (!canApply)
@@ -458,21 +455,14 @@ namespace TerrainTools.MoundMaker
 
                 drawAt.z -= 1;
 
-                if (drawAt.z > _maxTerrainHeight)
-                    drawAt.z = _maxTerrainHeight;
+                if (drawAt.z > MaxTerrainHeight)
+                    drawAt.z = MaxTerrainHeight;
                 else if (drawAt.z < 0)
                     drawAt.z = 0;
 
 
                 _meshDrawer.DrawAtCoordinates(drawAt, MarkerYOffset, drawColor);
             }
-        }
-
-        public static int GetMaxHeight()
-        {
-            FieldInfo maxHeightField = typeof(MapSize).GetField("MaxMapEditorTerrainHeight", BindingFlags.Static | BindingFlags.Public);
-
-            return (int)maxHeightField.GetValue(null);
         }
 
         private static Color HeightToColor(Color[] colors, int sample, int min, int max)

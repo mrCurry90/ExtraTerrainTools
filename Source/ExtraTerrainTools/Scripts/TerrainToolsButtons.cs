@@ -1,53 +1,40 @@
 using System.Collections.Generic;
 using Timberborn.BottomBarSystem;
+using Timberborn.ToolButtonSystem;
 using Timberborn.ToolSystem;
 
 namespace TerrainTools
 {
     public class TerrainToolsButtons : IBottomBarElementsProvider
     {
-        private static readonly string ToolGroupNameKey = "TerrainTools.ToolGroupButton.Label";
-        private static readonly string ToolGroupSpecIconName = "TerrainToolsIconCol";
+        private static readonly string ToolGroupSpecId = "ExtraTerrainTools.ToolGroup";
+        private static readonly string ToolGroupSpecIconName = "TerrainToolsIcon";
 
         private readonly ToolButtonFactory _toolButtonFactory;
         private readonly ToolGroupButtonFactory _toolGroupButtonFactory;
         private readonly TerrainToolsManager _terrainToolsManager;
+        private readonly ToolGroupService _toolGroupService;
 
-        public TerrainToolsButtons(ToolButtonFactory toolButtonFactory, ToolGroupButtonFactory toolGroupButtonFactory, TerrainToolsManager terrainToolsManager)
+        public TerrainToolsButtons(ToolButtonFactory toolButtonFactory, ToolGroupButtonFactory toolGroupButtonFactory, TerrainToolsManager terrainToolsManager, ToolGroupService toolGroupService)
         {
             _toolButtonFactory = toolButtonFactory;
             _toolGroupButtonFactory = toolGroupButtonFactory;
             _terrainToolsManager = terrainToolsManager;
+            _toolGroupService = toolGroupService;
         }
 
         public IEnumerable<BottomBarElement> GetElements()
         {
-            // Create tool group button
-            TerrainToolsToolGroup toolGroup = new(ToolGroupNameKey, ToolGroupSpecIconName);
-            ToolGroupButton toolGroupButton = _toolGroupButtonFactory.CreateBlue(toolGroup);
+            ToolGroupSpec toolGroupSpec = _toolGroupService.GetGroup(ToolGroupSpecId);
+            ToolGroupButton toolGroupButton = _toolGroupButtonFactory.CreateGreen(toolGroupSpec);
 
             // Add tools
             foreach (TerrainTool tool in _terrainToolsManager.GetTools())
             {
-                var icon = tool.Icon != "" ? tool.Icon : ToolGroupSpecIconName;
-                tool.SetToolGroup(toolGroup);
-                ToolButton button = _toolButtonFactory.Create(tool, icon, toolGroupButton.ToolButtonsElement);
+                ToolButton button = _toolButtonFactory.Create(tool, tool.Icon != "" ? tool.Icon : ToolGroupSpecIconName, toolGroupButton.ToolButtonsElement);
                 toolGroupButton.AddTool(button);
             }
             yield return BottomBarElement.CreateMultiLevel(toolGroupButton.Root, toolGroupButton.ToolButtonsElement);
         }
-
-        // Tool Group definition class
-        public class TerrainToolsToolGroup : ToolGroup
-        {
-            private string _iconName;
-            public override string IconName => _iconName;
-            public TerrainToolsToolGroup(string nameLocKey, string iconName)
-            {
-                DisplayNameLocKey = nameLocKey;
-                _iconName = iconName;
-            }
-        }
-
     }
 }

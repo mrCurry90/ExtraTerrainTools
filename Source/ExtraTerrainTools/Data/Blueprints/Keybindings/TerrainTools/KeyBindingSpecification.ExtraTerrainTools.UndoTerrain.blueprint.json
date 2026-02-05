@@ -1,0 +1,15 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.UndoTerrain",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Undo",
+		"Order": 100,
+		"AllowOtherModifiers": false,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/z",
+		"InputModifiers": "Ctrl",
+		"Unchangeable": false
+	}
+}

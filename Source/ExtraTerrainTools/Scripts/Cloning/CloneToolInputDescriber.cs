@@ -120,6 +120,7 @@ namespace TerrainTools.Cloning
                             .BuildAndClear(),
                         builder.SetDescription(GROUP_FLIP).SetOrder(6)
                             .AddKeybindInput(KEY_FLIP)
+                            .AddDescriptionInput("<-- WIP for objects, use carefully")
                             .BuildAndClear(),
                         builder.SetDescription(GROUP_HEIGHT_TRIM).SetOrder(7)
                             .AddKeybindInput(KEY_HEIGHT_UP)

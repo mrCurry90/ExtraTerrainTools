@@ -17,32 +17,35 @@ namespace TerrainTools.PathPainter
         [SerializeField] private Color _baseColor;
         [SerializeField] private Color _hoverColor;
         [SerializeField] private Color _highlightColor;
-        
-        public Vector3 Position { 
-            get { return transform.position; } 
-            set { transform.position = value; } 
+
+        public Vector3 Position
+        {
+            get { return transform.position; }
+            set { transform.position = value; }
         }
-        
-        public Color Color {
+
+        public Color Color
+        {
             get { return _renderer.material.color; }
             set { _renderer.material.color = value; }
         }
 
         public State CurrentState { get; private set; }
-        
-        public Collider Collider { 
+
+        public Collider Collider
+        {
             get { return _collider; }
         }
 
         public static implicit operator Vector3(LinePoint p) => p.Position;
 
-        public void SetState( State newState )
+        public void SetState(State newState)
         {
-           if (newState == CurrentState) return;
-           
-        //    Utils.Log("Setting state of point: {0} - Old: {1} - New: {2}", Position, CurrentState, newState);
+            if (newState == CurrentState) return;
 
-            switch( newState )
+            // Utils.Log("Setting state of point: {0} - Old: {1} - New: {2}", Position, CurrentState, newState);
+
+            switch (newState)
             {
                 case State.Idle:
                     Color = _baseColor;

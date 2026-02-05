@@ -102,7 +102,7 @@ namespace TerrainTools.MoundMaker
             #endregion header
             #region Shape
             content.Add(_elementFactory.MakeLabel(_loc.T(_keyShapeHeader), TextAnchor.MiddleCenter, TextFormat.Bold));
-            int maxHeight = MoundMakerTool.GetMaxHeight();
+            int maxHeight = _tool.MaxTerrainHeight;
             content.Add(
                 MakeParameterSlider(
                     ref _peakHeightSlider, ref _peakHeightSliderValue,

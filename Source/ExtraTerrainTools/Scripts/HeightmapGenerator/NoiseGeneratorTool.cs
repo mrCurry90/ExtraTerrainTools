@@ -1,7 +1,7 @@
 using Timberborn.SingletonSystem;
-using Timberborn.ToolSystem;
-using TerrainTools.EditorHistory;
 using Timberborn.Localization;
+using Timberborn.UndoSystem;
+using Timberborn.ToolSystemUI;
 
 namespace TerrainTools.NoiseGenerator
 {
@@ -14,12 +14,12 @@ namespace TerrainTools.NoiseGenerator
         private ToolDescription _toolDescription;
 
         public readonly NoiseGenerator _noiseGenerator;
-        private readonly EditorHistoryService _historyService;
+        private readonly IUndoRegistry _undoRegistry;
 
-        public NoiseGeneratorTool(NoiseGenerator noiseGenerator, EditorHistoryService historyService, ILoc loc) : base(loc)
+        public NoiseGeneratorTool(NoiseGenerator noiseGenerator, IUndoRegistry undoRegistry, ILoc loc) : base(loc)
         {
             _noiseGenerator = noiseGenerator;
-            _historyService = historyService;
+            _undoRegistry = undoRegistry;
         }
 
         public void Load()
@@ -30,22 +30,16 @@ namespace TerrainTools.NoiseGenerator
             _toolDescription = _builder.Build();
         }
 
-        public override ToolDescription Description()
+        public override ToolDescription DescribeTool()
         {
             return _toolDescription;
-        }
-
-        public override string WarningText()
-        {
-            return "";
         }
 
         public void GenerateHeightMap(NoiseParameters parameters, bool clear)
         {
             var mode = clear ? NoiseGenerator.UpdateMode.ClearExisting : NoiseGenerator.UpdateMode.UpdateExisting;
-            _historyService.BatchStart();
             _noiseGenerator.Generate(parameters, mode);
-            _historyService.BatchStop();
+            _undoRegistry.CommitStack();
         }
 
         public override void Enter()
@@ -55,7 +49,7 @@ namespace TerrainTools.NoiseGenerator
 
         public override void Exit()
         {
-
+            _undoRegistry.CommitStack();
         }
     }
 }

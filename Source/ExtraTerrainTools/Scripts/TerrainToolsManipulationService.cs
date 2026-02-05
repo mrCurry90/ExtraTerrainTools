@@ -5,12 +5,16 @@ using UnityEngine;
 using Timberborn.SingletonSystem;
 using Timberborn.BlockObjectTools;
 using Timberborn.EntitySystem;
-using Timberborn.PrefabSystem;
 using Timberborn.WaterSourceSystem;
 using Timberborn.Coordinates;
-using Timberborn.Growing;
 using System;
+using Timberborn.TemplateSystem;
+using Timberborn.BlueprintSystem;
+using Timberborn.InventorySystem;
 using Timberborn.BaseComponentSystem;
+using Timberborn.Stockpiles;
+using Timberborn.Goods;
+using System.Collections.Immutable;
 
 namespace TerrainTools
 {
@@ -20,18 +24,18 @@ namespace TerrainTools
         private readonly ITerrainService _terrainService;
         private readonly BlockObjectPlacerService _placerService;
         private readonly EntityService _entityService;
-        private readonly PrefabNameMapper _prefabNameMapper;
+        private readonly TemplateNameMapper _templateNameMapper;
         private readonly BlockValidator _blockValidator;
 
         public TerrainToolsManipulationService(
             IBlockService blockService, ITerrainService terrainService, BlockObjectPlacerService placerService,
-            EntityService entityService, PrefabNameMapper prefabNameMapper, BlockValidator blockValidator)
+            EntityService entityService, TemplateNameMapper templateNameMapper, BlockValidator blockValidator)
         {
             _blockService = blockService;
             _terrainService = terrainService;
             _placerService = placerService;
             _entityService = entityService;
-            _prefabNameMapper = prefabNameMapper;
+            _templateNameMapper = templateNameMapper;
             _blockValidator = blockValidator;
         }
 
@@ -83,7 +87,7 @@ namespace TerrainTools
             var belowStart = startCoord.Below();
             var startIsSupported = _terrainService.Underground(belowStart)
                                     ||
-                                    _blockService.GetTopObjectAt(belowStart)?.PositionedBlocks.GetBlock(belowStart).Stackable == BlockStackable.BlockObject;
+                                    _blockService.GetTopObjectComponentAt<BlockObject>(belowStart)?.PositionedBlocks.GetBlock(belowStart).Stackable == BlockStackable.BlockObject;
 
             for (var i = 1; i <= height; i++)
             {
@@ -104,32 +108,21 @@ namespace TerrainTools
         }
 
         /////// Object manipulation ///////
-        public bool PlaceObject(string prefabName, Placement placement, float growth = -1)
+        public bool PlaceObject(string prefabName, Placement placement, Action<BaseComponent> placedCallback)
         {
             var prefab = GetBlockObjectSpec(prefabName);
             var placer = _placerService.GetMatchingPlacer(prefab);
             if (!_blockValidator.BlocksValid(prefab, placement))
                 return false;
 
-            placer.Place(prefab, placement);
-
-            var blockObject = GetFirstObjectAt(prefabName, placement.Coordinates);
-            if (blockObject != null)
-            {
-                var growable = blockObject.GetComponentFast<Growable>();
-                if (growable != null && growth >= 0)
-                {
-                    growable.IncreaseGrowthProgress(growth);
-                }
-            }
-
+            placer.Place(prefab, placement, placedCallback);
             return true;
         }
 
         public void DeleteObject(BlockObject obj)
         {
-            var waterSource = obj.GetComponentFast<WaterSource>();
-            var entity = obj.GetComponentFast<EntityComponent>();
+            var waterSource = obj.GetComponent<WaterSource>();
+            var entity = obj.GetComponent<EntityComponent>();
 
             if (waterSource != null)
                 waterSource.DeleteEntity();
@@ -144,34 +137,54 @@ namespace TerrainTools
         {
             foreach (var obj in _blockService.GetObjectsAt(coord))
             {
-                if (obj.GetComponentFast<PrefabSpec>().PrefabName == name && (predicate == null || predicate(obj)))
+                if (obj.GetComponent<TemplateSpec>().TemplateName == name && (predicate == null || predicate(obj)))
                 {
                     return obj;
                 }
             }
             return null;
         }
-        public PrefabSpec GetPrefabSpec(string prefabName)
+
+        public TemplateSpec GetTemplateSpec(string templateName)
         {
-            return _prefabNameMapper.GetPrefab(prefabName);
+            return _templateNameMapper.GetTemplate(templateName);
         }
-        public BlockObjectSpec GetBlockObjectSpec(string prefabName)
+        public BlockObjectSpec GetBlockObjectSpec(string templateName)
         {
-            // TODO Doesn't fit purpose of class - investigate where it belongs
-            GetPrefabSpec(prefabName).TryGetComponentFast<BlockObjectSpec>(out var spec);
+            var spec = GetTemplateSpec(templateName)?.Blueprint.GetSpec<BlockObjectSpec>();
             return spec;
         }
 
-        public T GetPrefabComponent<T>(PrefabSpec prefab) where T : BaseComponent
+        public T GetSpec<T>(TemplateSpec template) where T : ComponentSpec
         {
-            if (prefab.TryGetComponentFast(out T component))
-                return component;
-            return default;
+            return template.Blueprint.GetSpec<T>();
         }
 
-        public T GetPrefabComponent<T>(string prefabName) where T : BaseComponent
+        public T GetSpec<T>(string prefabName) where T : ComponentSpec
         {
-            return GetPrefabComponent<T>(GetPrefabSpec(prefabName));
+            return GetSpec<T>(GetTemplateSpec(prefabName));
+        }
+
+
+        public void Set(Stockpile stockpile, string goodId, int amount)
+        {
+            // Clear existing
+            ImmutableArray<GoodAmount>.Enumerator enumerator = stockpile.Inventory.Stock.ToImmutableArray().GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                GoodAmount current = enumerator.Current;
+                stockpile.Inventory.Take(current);
+            }
+
+            // Set new good
+            stockpile.GetComponent<SingleGoodAllower>().Allow(goodId);
+            stockpile.GetComponent<FixedStockpile>().SetFixedGood(goodId);
+
+            // Give amount
+            if (amount > 0)
+            {
+                stockpile.Inventory.Give(new GoodAmount(goodId, amount));
+            }
         }
     }
 }

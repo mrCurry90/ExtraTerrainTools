@@ -1,0 +1,14 @@
+{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionPosDown",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.PosDown",
+		"Order": 185,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/pageDown",
+		"Unchangeable": false
+	}
+}

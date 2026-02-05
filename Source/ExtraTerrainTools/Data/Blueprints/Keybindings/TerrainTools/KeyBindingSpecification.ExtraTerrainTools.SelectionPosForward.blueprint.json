@@ -1,0 +1,14 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionPosForward",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.PosForward",
+		"Order": 180,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/upArrow",
+		"Unchangeable": false
+	}
+}

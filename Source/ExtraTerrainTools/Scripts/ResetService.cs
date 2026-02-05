@@ -31,7 +31,8 @@ namespace TerrainTools
             ITerrainService terrainService,
             MapEditorSimulation mapEditorSim
 
-        ) {
+        )
+        {
             _blockService = blockService;
             _entityRegistry = entityRegistry;
             _entityService = entityService;
@@ -43,25 +44,26 @@ namespace TerrainTools
 
         public void Load()
         {
-        }        
+        }
 
-        public void ClearEntities() {
+        public void ClearEntities()
+        {
             foreach (var e in GetEntityList())
             {
                 Delete(e);
             }
         }
 
-        
+
         public void ClearWaterSources()
         {
             _mapEditorSim.ResetSimulation();
 
             foreach (var e in GetEntityList())
             {
-                var entityBlockObject = e.GetComponentFast<BlockObject>();
-                var entityIsWaterSource = e.GetComponentFast<WaterSource>() != null;
-                if( entityBlockObject != null && entityIsWaterSource)
+                var entityBlockObject = e.GetComponent<BlockObject>();
+                var entityIsWaterSource = e.GetComponent<WaterSource>() != null;
+                if (entityBlockObject != null && entityIsWaterSource)
                 {
                     Utils.Log(entityBlockObject + " marked for deletion.");
                     Delete(entityBlockObject);
@@ -69,22 +71,23 @@ namespace TerrainTools
             }
         }
 
-        public void UpdateEntities() {
+        public void UpdateEntities()
+        {
             // Scan entities            
             var offset = new Vector3Int(0, 0, 1);
             foreach (var e in GetEntityList())
             {
-                var entityBlockObject = e.GetComponentFast<BlockObject>();
+                var entityBlockObject = e.GetComponent<BlockObject>();
                 if (entityBlockObject != null && !_blockService.AnyTopObjectAt(entityBlockObject.Coordinates - offset))
                 {
-                    var stacked = GetBlockObjectAndStacked( entityBlockObject, true );
-                   
+                    var stacked = GetBlockObjectAndStacked(entityBlockObject, true);
+
                     // All other objects are vertical so should allow moving them up or down
                     int deltaZ = _terrainService.CellHeight((Vector2Int)entityBlockObject.Coordinates) - entityBlockObject.CoordinatesAtBaseZ.z;
                     foreach (var blockObject in stacked)
                     {
                         var c = blockObject.Coordinates;
-                        if( !AdjustBlockObjectHeight(blockObject, deltaZ) )
+                        if (!AdjustBlockObjectHeight(blockObject, deltaZ))
                         {
                             Utils.Log("Could not adjust {0} at {1} by {2}. Entity marked for deletion.", blockObject, c, deltaZ);
                             Delete(blockObject);
@@ -121,14 +124,14 @@ namespace TerrainTools
 
         private void ToggleSimPanel(bool state)
         {
-            if( _mapEditorSimPanel == null ) 
+            if (_mapEditorSimPanel == null)
             {
                 // Super hacky search for the sim panel
                 var uIDocuments = Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
                 foreach (var uiDoc in uIDocuments)
                 {
                     var result = uiDoc.rootVisualElement.Q("MapEditorSimulationPanel");
-                    if(result != null)
+                    if (result != null)
                     {
                         _mapEditorSimPanel = result;
                     }
@@ -137,7 +140,7 @@ namespace TerrainTools
 
             _mapEditorSimPanel?.SetEnabled(state);
         }
-     
+
         private List<EntityComponent> GetEntityList()
         {
             return _entityRegistry.Entities.ToList();
@@ -149,18 +152,18 @@ namespace TerrainTools
             coord.z += heightAdjustment;
             if (!_blockService.Contains(coord))
                 return false;
-            
+
             try
             {
-                blockObject.Reposition( new(
+                blockObject.Reposition(new(
                     coord, blockObject.Placement.Orientation, blockObject.Placement.FlipMode
                 ));
             }
-            catch(InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 return false;
             }
-            
+
             return true;
         }
 
@@ -179,8 +182,8 @@ namespace TerrainTools
             if (set.Add(blockObject))
             {
                 foreach (Block block in from block in blockObject.PositionedBlocks.GetAllBlocks()
-                    where upward ? block.Stackable.IsStackable() : block.IsFoundationBlock
-                    select block)
+                                        where upward ? block.Stackable.IsStackable() : block.IsFoundationBlock
+                                        select block)
                 {
                     int z = upward ? 1 : (-1);
                     Vector3Int coordinates = block.Coordinates + new Vector3Int(0, 0, z);
@@ -197,7 +200,7 @@ namespace TerrainTools
 
         private static bool IsValid(BlockObject blockObject, int referenceZ)
         {
-            return blockObject.CoordinatesAtBaseZ.z == referenceZ;            
+            return blockObject.CoordinatesAtBaseZ.z == referenceZ;
         }
 
         private static bool IncludeNearBlock(Block block, bool upward)
@@ -207,15 +210,15 @@ namespace TerrainTools
 
         private void Delete(BaseComponent obj)
         {
-            var blockObject = obj.GetComponentFast<BlockObject>();
-            var waterSource = obj.GetComponentFast<WaterSource>();
-            var entity = obj.GetComponentFast<EntityComponent>();
+            var blockObject = obj.GetComponent<BlockObject>();
+            var waterSource = obj.GetComponent<WaterSource>();
+            var entity = obj.GetComponent<EntityComponent>();
 
-            if( waterSource != null)
+            if (waterSource != null)
                 waterSource.DeleteEntity();
-            
-            if( blockObject != null)
-                blockObject.DeleteEntity();        
+
+            if (blockObject != null)
+                blockObject.DeleteEntity();
 
             _entityService.Delete(entity);
         }
