@@ -1,15 +1,15 @@
-﻿{
-	"KeyBindingSpec": {
-		"Id": "ExtraTerrainTools.RedoTerrainFast",
-		"GroupId": "TerrainTools",
-		"LocKey": "TerrainTools.Keybinding.FastRedo",
-		"Order": 103,
-		"AllowOtherModifiers": false,
-		"DevModeOnly": false
-	},
-	"PrimaryInputBindingSpec": {
-		"Path": "/Keyboard/y",
-		"InputModifiers": "Ctrl, Shift",
-		"Unchangeable": false
-	}
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.RedoTerrainFast",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.FastRedo",
+    "Order": 103,
+    "AllowOtherModifiers": false,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/y",
+    "InputModifiers": "Ctrl, Shift",
+    "Unchangeable": false
+  }
 }

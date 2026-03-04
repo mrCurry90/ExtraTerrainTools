@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Timberborn.Common;
 using Timberborn.DropdownSystem;
@@ -14,9 +15,11 @@ namespace TerrainTools
         private readonly Func<string> _getValueDelegate;
         private readonly Action<string> _setValueDelegate;
         private bool _flipImages;
-        public bool Flip{ get => _flipImages; set
+        public bool Flip
+        {
+            get => _flipImages; set
             {
-                _flipImages = value;                
+                _flipImages = value;
             }
         }
         public IReadOnlyList<string> Items => _items.AsReadOnlyList();
@@ -35,7 +38,7 @@ namespace TerrainTools
             _setValueDelegate = setValueDelegate;
         }
 
-        public string FormatDisplayText(string value)
+        public string FormatDisplayText(string value, bool selected)
         {
             return ""; // value;
         }
@@ -43,6 +46,11 @@ namespace TerrainTools
         public Sprite GetIcon(string value)
         {
             return _flipImages ? _imageService.Flip(_imageService.GetSprite(value)) : _imageService.GetSprite(value);
+        }
+
+        public ImmutableArray<string> GetItemClasses(string value)
+        {
+            return ImmutableArray<string>.Empty;
         }
 
         public string GetValue()
@@ -57,7 +65,7 @@ namespace TerrainTools
 
         public void SetFlip(bool flip)
         {
-            
+
         }
     }
 }
