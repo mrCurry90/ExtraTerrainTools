@@ -100,7 +100,7 @@ namespace TerrainTools
             label.style.unityTextAlign = alignAnchor;
             return label;
         }
-        public TextField MakeTextField(Action changeAction = null)
+        public TextField MakeTextField(Action<TextField> changeAction = null)
         {
             NineSliceTextField textField = new();
             textField.AddToClassList("text-field");
@@ -109,7 +109,7 @@ namespace TerrainTools
             {
                 textField.RegisterValueChangedCallback(delegate
                 {
-                    changeAction();
+                    changeAction(textField);
                 });
             }
 

@@ -40,5 +40,3 @@ Use Steam Workshop or Mod.io
 - Selection Editor: Flip-feature doesn't work properly for some objects, use with care.
 - Changing large chunks of terrain while water is on the map can cause issues with the game's water system. The Heightmap Generator does its best to clear up the watersources and existing water before applying changes but occasionally this is not enough.
 **Recommendation:** if you have placed water/badwater sources **Save before clicking Generate**.
-
-

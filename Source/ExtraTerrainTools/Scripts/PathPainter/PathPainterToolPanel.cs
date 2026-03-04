@@ -247,7 +247,7 @@ namespace TerrainTools.PathPainter
                 if (link.value)
                 {
                     _rightSlopeDropdownProvider.SetValue(_leftSlopeDropdownProvider.GetValue());
-                    _rightSlopeDropdown.RefreshContent();
+                    _rightSlopeDropdown.UpdateSelectedValue();
                     _leftSlopeDropdown.ValueChanged += UpdateLinkedSlopeDropdown;
                 }
                 else
@@ -411,7 +411,7 @@ namespace TerrainTools.PathPainter
         private void UpdateLinkedSlopeDropdown(object sender, EventArgs e)
         {
             _rightSlopeDropdownProvider.SetValue(_leftSlopeDropdownProvider.GetValue());
-            _rightSlopeDropdown.RefreshContent();
+            _rightSlopeDropdown.UpdateSelectedValue();
         }
 
         private void UpdateLinkedMinSlider(ChangeEvent<float> ev)

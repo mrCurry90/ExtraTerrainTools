@@ -10,6 +10,7 @@ using Timberborn.Stockpiles;
 using Timberborn.TemplateSystem;
 using Timberborn.TerrainSystem;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace TerrainTools.Cloning
 {
@@ -224,105 +225,78 @@ namespace TerrainTools.Cloning
         {
             // TODO: Investigate caching the result to avoid allocating new keyvaluepairs on each call
 
-            // TODO: Flipping is broken for objects, find a fix.
             foreach (var obj in _objectsInternal)
             {
                 var templateSpec = _manipulationService.GetTemplateSpec(obj.TemplateName);
                 var blockObjectSpec = templateSpec.GetSpec<BlockObjectSpec>();
-                var placeableSpec = templateSpec.GetSpec<PlaceableBlockObjectSpec>();
-                var modelRandomized = templateSpec.HasSpec<NaturalResourceModelRandomizerSpec>();
-                var blocks = blockObjectSpec.GetBlocks();
+                var isNaturalResource = templateSpec.HasSpec<NaturalResourceModelRandomizerSpec>();
 
                 Vector3Int localCoordinates = obj.Coordinates;
                 Orientation objOrientation = obj.Orientation;
                 FlipMode objFlipMode = obj.FlipMode;
-                Vector3Int pivotOffset = new();
-
-                if (!modelRandomized)
+                if (isNaturalResource)
                 {
-                    if (blockObjectSpec.Flippable && _flipMode.IsFlipped)
+                    localCoordinates = TransformLocal(localCoordinates);
+                }
+                else
+                {
+                    if (_flipMode.IsFlipped)
                     {
-                        switch (obj.Orientation)
+                        if (blockObjectSpec.Flippable) // All flippable objects
                         {
-                            case Orientation.Cw0:
-                                objFlipMode = obj.FlipMode.Flip();
-                                pivotOffset.x = blocks.Size.x - 1;
-                                break;
-                            case Orientation.Cw90:
-                                objFlipMode = obj.FlipMode.Flip();
-                                objOrientation = Flip(objOrientation);
-                                pivotOffset.x = 1 - blocks.Size.y + 1;
-                                pivotOffset.y = 1 - blocks.Size.x;
-                                break;
-                            case Orientation.Cw180:
-                                objFlipMode = obj.FlipMode.Flip();
-                                pivotOffset.x = 1 - blocks.Size.x;
-                                break;
-                            case Orientation.Cw270:
-                                objFlipMode = obj.FlipMode.Flip();
-                                objOrientation = Flip(objOrientation);
-                                pivotOffset.x = blocks.Size.y - 1 - 1;
-                                pivotOffset.y = blocks.Size.x - 1;
-                                break;
+                            Vector3Int pivot = Vector3Int.zero;
+                            objFlipMode = objFlipMode.Flip();
+                            switch (obj.Orientation)
+                            {
+                                case Orientation.Cw0:
+                                    pivot.x = blockObjectSpec.Size.x - 1;
+                                    break;
+                                case Orientation.Cw90:
+                                    pivot.y = -(blockObjectSpec.Size.x - 1);
+                                    objOrientation = Orientation.Cw270;
+                                    break;
+                                case Orientation.Cw180:
+                                    pivot.x = -(blockObjectSpec.Size.x - 1);
+                                    break;
+                                case Orientation.Cw270:
+                                    pivot.y = blockObjectSpec.Size.x - 1;
+                                    objOrientation = Orientation.Cw90;
+                                    break;
+                            }
+
+                            localCoordinates += pivot;
+                        }
+                        else if (blockObjectSpec.Size.x == 1)  // Stairs and Natural overhangs
+                        {
+                            objOrientation = objOrientation switch
+                            {
+                                Orientation.Cw0 => Orientation.Cw0,
+                                Orientation.Cw90 => Orientation.Cw270,
+                                Orientation.Cw180 => Orientation.Cw180,
+                                Orientation.Cw270 => Orientation.Cw90,
+                                _ => throw new ArgumentOutOfRangeException()
+                            };
+                        }
+                        else
+                        {
+                            objOrientation = objOrientation switch
+                            {
+                                Orientation.Cw0 => Orientation.Cw270,
+                                Orientation.Cw90 => Orientation.Cw180,
+                                Orientation.Cw180 => Orientation.Cw90,
+                                Orientation.Cw270 => Orientation.Cw0,
+                                _ => throw new ArgumentOutOfRangeException()
+                            };
                         }
                     }
-                    else if (!blockObjectSpec.Flippable && _flipMode.IsFlipped)
-                    {
-                        switch (obj.Orientation)
-                        {
-                            case Orientation.Cw0:
-                                pivotOffset.x = blocks.Size.x - 1;
-                                break;
-                            case Orientation.Cw90:
-                                objOrientation = Flip(objOrientation);
-                                pivotOffset.x = 1 - blocks.Size.y + 1;
-                                pivotOffset.y = 1 - blocks.Size.x;
-                                break;
-                            case Orientation.Cw180:
-                                pivotOffset.x = 1 - blocks.Size.x;
-                                break;
-                            case Orientation.Cw270:
-                                objOrientation = Flip(objOrientation);
-                                pivotOffset.x = blocks.Size.y - 1 - 1;
-                                pivotOffset.y = blocks.Size.x - 1;
-                                break;
-                        }
-                    }
+                    localCoordinates = TransformLocal(localCoordinates);
                     objOrientation = Add(objOrientation, _orientation);
                 }
-                // Vector3Int offset = new();
-                // if (blockObjectSpec.Flippable)
-                // {
-                //     objFlipMode = XOR(_flipMode, obj.FlipMode);
-                //     objOrientation = Add(obj.Orientation, _orientation);
-                //     if (_flipMode.IsFlipped)
-                //         offset = new(obj.Orientation < Orientation.Cw180 ? 1 - blocks.Size.x : blocks.Size.x - 1, 0, 0);
-                //     if (obj.Orientation == Orientation.Cw90 || obj.Orientation == Orientation.Cw270)
-                //     {
-                //         objOrientation = Flip(objOrientation);
-                //     }
-                // }
-                // else
-                // {
-                //     objFlipMode = obj.FlipMode;
-                //     objOrientation = Add(obj.Orientation, _orientation);
-                //     if (_flipMode.IsFlipped)
-                //     {
-                //         if (placeableSpec != null && placeableSpec.CustomPivot.HasCustomPivot) // Assumption: Only natural overhangs as of 1.0
-                //         {
-                //             objOrientation = Flip(objOrientation);
-                //         }
-                //         else
-                //         {
-                //             offset = new(1 - blocks.Size.x, 0, 0);
-                //         }
-                //     }
-                // }
 
                 yield return new BlockObjectData
                 {
                     TemplateName = obj.TemplateName,
-                    Coordinates = _origin + TransformLocal(localCoordinates + pivotOffset),
+                    Coordinates = _origin + localCoordinates,
                     Orientation = objOrientation,
                     FlipMode = objFlipMode,
                     Growth = obj.Growth,
@@ -332,7 +306,7 @@ namespace TerrainTools.Cloning
             }
         }
 
-        private IEnumerable<Vector3Int> AllCoordinates(Vector3Int from, Vector3Int to)
+        private static IEnumerable<Vector3Int> AllCoordinates(Vector3Int from, Vector3Int to)
         {
             var a = Mathf.Abs(to.x - from.x);
             var b = Mathf.Abs(to.y - from.y);

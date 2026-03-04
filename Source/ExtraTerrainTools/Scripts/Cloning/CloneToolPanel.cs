@@ -169,12 +169,7 @@ namespace TerrainTools.Cloning
 
                 if (input.HasDescription())
                 {
-                    // TODO Remove when Flip issues resolved
-                    var description = Localize(input.DescriptionKey);
-                    if (description == _loc.T(_keyTipNoText))
-                        description = input.DescriptionKey;
-
-                    builder.Append(description);
+                    builder.Append(Localize(input.DescriptionKey));
                 }
 
                 if (input.HasDescription() && input.HasKeybind())
