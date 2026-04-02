@@ -1,0 +1,14 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionPosBack",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.PosBack",
+		"Order": 181,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/downArrow",
+		"Unchangeable": false
+	}
+}
