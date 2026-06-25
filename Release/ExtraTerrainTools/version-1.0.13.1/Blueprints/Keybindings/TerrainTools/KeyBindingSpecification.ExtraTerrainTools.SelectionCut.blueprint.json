@@ -1,0 +1,15 @@
+﻿{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionCut",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.Cut",
+		"Order": 150,
+		"AllowOtherModifiers": false,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/x",
+		"InputModifiers": "Ctrl",
+		"Unchangeable": false
+	}
+}

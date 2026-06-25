@@ -1,28 +1,15 @@
+using System;
 using System.Collections.Generic;
-using Timberborn.ConstructionSites;
+using System.Linq;
 
 namespace TerrainTools.Cloning
 {
-    public class CloneToolInputGroup
+    public sealed record CloneToolInputGroup(string NameKey, int Order, CloneToolInput[] Inputs)
     {
-        public string NameKey { get; init; }
-        public int Order { get; init; }
-        public CloneToolInput[] Inputs { get; init; }
-
-        private CloneToolInputGroup() { }
-
-        public virtual bool Equals(CloneToolInputGroup other)
+        public static bool Equals(CloneToolInputGroup a, object b)
         {
-            if (NameKey.Equals(other.NameKey))
-            {
-                return false;
-            }
-
-            return NameKey.Equals(other.NameKey);
-        }
-        public override bool Equals(object obj)
-        {
-            return obj is CloneToolInputGroup other && Equals(other);
+            if (b is not CloneToolInputGroup groupB) return false;
+            return a.NameKey == groupB.NameKey;
         }
 
         public static bool operator ==(CloneToolInputGroup a, object b)
@@ -51,88 +38,37 @@ namespace TerrainTools.Cloning
             return NameKey.GetHashCode();
         }
 
+        public static Builder DescribedAs(string nameKey) => new(nameKey);
+
         public class Builder
         {
-            private string _groupDesc;
+            private string _nameKey;
             private int _order;
-            private List<CloneToolInput> _actions = new();
+            private List<CloneToolInput> _inputs = new();
 
-            public Builder() { }
-
-            public Builder(string description, int order)
+            internal Builder(string nameKey)
             {
-                _groupDesc = description;
-                _order = order;
+                _nameKey = nameKey;
             }
 
-            public Builder SetDescription(string description)
-            {
-                _groupDesc = description;
-                return this;
-            }
-
-            public Builder SetOrder(int order)
+            public Builder OrderedBy(int order)
             {
                 _order = order;
                 return this;
             }
 
-            public Builder AddInput(string descriptionKey, string keybindId)
+            public Builder PerformedBy(Action<CloneToolInput.Builder> build)
             {
-                _actions.Add(new()
-                {
-                    DescriptionKey = descriptionKey,
-                    KeybindId = keybindId
-                });
+                var ib = new CloneToolInput.Builder();
+                build(ib);
+                _inputs.Add(ib.Build());
                 return this;
             }
+            public Builder PerformedBy(params CloneToolInput[] inputs) { _inputs.AddRange(inputs); return this; }
+            public Builder Or(params CloneToolInput[] inputs) => PerformedBy(inputs);
 
-            public Builder AddDescriptionInput(string description)
-            {
-                _actions.Add(new()
-                {
-                    DescriptionKey = description,
-                    KeybindId = ""
-                });
-                return this;
-            }
-
-            public Builder AddKeybindInput(string keybindId)
-            {
-                _actions.Add(new()
-                {
-                    DescriptionKey = "",
-                    KeybindId = keybindId
-                });
-                return this;
-            }
-
-            public Builder Clear()
-            {
-                _groupDesc = "";
-                _order = 0;
-                _actions.Clear();
-
-                return this;
-            }
-
-            public CloneToolInputGroup Build()
-            {
-                return new()
-                {
-                    NameKey = _groupDesc,
-                    Order = _order,
-                    Inputs = _actions.ToArray()
-                };
-            }
-            public CloneToolInputGroup BuildAndClear()
-            {
-                var output = Build();
-                Clear();
-                return output;
-            }
-
-
+            public CloneToolInputGroup Build() => new(_nameKey, _order, _inputs.ToArray());
+            public static implicit operator CloneToolInputGroup(Builder builder) => builder.Build();
         }
     }
 }

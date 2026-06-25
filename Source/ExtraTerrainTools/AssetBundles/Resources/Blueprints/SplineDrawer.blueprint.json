@@ -1,0 +1,25 @@
+{
+  "SplineDrawerSpec": {
+    "LinePointPrefab": "Prefabs/Line/Point",
+    "DashedLinePrefab": "Prefabs/Line/Dashed",
+    "SolidLinePrefab": "Prefabs/Line/Solid",
+    "BaseColor": {
+      "r": 0.7529412,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 1.0
+    },
+    "HoverColor": {
+      "r": 1.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 1.0
+    },
+    "HighlightColor": {
+      "r": 1.0,
+      "g": 0.5019608,
+      "b": 0.5019608,
+      "a": 1.0
+    }
+  }
+}

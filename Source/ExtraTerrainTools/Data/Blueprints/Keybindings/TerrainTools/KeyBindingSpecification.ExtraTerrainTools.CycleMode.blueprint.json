@@ -1,14 +1,15 @@
-﻿{
-	"KeyBindingSpec": {
-		"Id": "ExtraTerrainTools.CycleMode",
-		"GroupId": "TerrainTools",
-		"LocKey": "TerrainTools.Keybinding.CycleMode",
-		"Order": 120,
-		"AllowOtherModifiers": false,
-		"DevModeOnly": false
-	},
-	"PrimaryInputBindingSpec": {
-		"Path": "/Keyboard/tab",
-		"Unchangeable": false
-	}
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.CycleMode",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.CycleMode",
+    "Order": 120,
+    "AllowOtherModifiers": false,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/tab",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
 }

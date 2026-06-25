@@ -3,7 +3,6 @@ using Timberborn.BlockSystem;
 using Timberborn.TerrainSystem;
 using UnityEngine;
 using Timberborn.SingletonSystem;
-using Timberborn.BlockObjectTools;
 using Timberborn.EntitySystem;
 using Timberborn.WaterSourceSystem;
 using Timberborn.Coordinates;
@@ -22,21 +21,22 @@ namespace TerrainTools
     {
         private readonly IBlockService _blockService;
         private readonly ITerrainService _terrainService;
-        private readonly BlockObjectPlacerService _placerService;
         private readonly EntityService _entityService;
         private readonly TemplateNameMapper _templateNameMapper;
         private readonly BlockValidator _blockValidator;
+        private readonly BlockObjectFactory _blockObjectFactory;
 
         public TerrainToolsManipulationService(
-            IBlockService blockService, ITerrainService terrainService, BlockObjectPlacerService placerService,
-            EntityService entityService, TemplateNameMapper templateNameMapper, BlockValidator blockValidator)
+            IBlockService blockService, ITerrainService terrainService,
+            EntityService entityService, TemplateNameMapper templateNameMapper, BlockValidator blockValidator,
+            BlockObjectFactory blockObjectFactory)
         {
             _blockService = blockService;
             _terrainService = terrainService;
-            _placerService = placerService;
             _entityService = entityService;
             _templateNameMapper = templateNameMapper;
             _blockValidator = blockValidator;
+            _blockObjectFactory = blockObjectFactory;
         }
 
         public void Load()
@@ -61,10 +61,10 @@ namespace TerrainTools
                     _terrainService.UnsetTerrain(coordinate3D, Mathf.Abs(adjustBy) + 1);
                 }
             }
-            catch (System.Exception e)
+            catch (System.Exception)
             {
                 Utils.Log("coord: {0}, adjustBy: {1}", coordinate3D, adjustBy);
-                throw e;
+                throw;
             }
         }
 
@@ -108,14 +108,22 @@ namespace TerrainTools
         }
 
         /////// Object manipulation ///////
-        public bool PlaceObject(string prefabName, Placement placement, Action<BaseComponent> placedCallback)
+        public bool PlaceObject(string templateName, Placement placement, Action<BaseComponent> placedCallback)
         {
-            var prefab = GetBlockObjectSpec(prefabName);
-            var placer = _placerService.GetMatchingPlacer(prefab);
-            if (!_blockValidator.BlocksValid(prefab, placement))
+            var template = GetBlockObjectSpec(templateName);
+            if (!_blockValidator.BlocksValid(template, placement))
                 return false;
 
-            placer.Place(prefab, placement, placedCallback);
+            var entityBuilder = new EntitySetup.Builder(template.Blueprint);
+            var blockObject = _blockObjectFactory.CreateFinished(entityBuilder, placement);
+            if (blockObject == null)
+            {
+                Utils.Log("Failed to create block object for template {0} at {1}", templateName, placement.Coordinates);
+                return false;
+            }
+
+            placedCallback?.Invoke(blockObject);
+
             return true;
         }
 
@@ -173,7 +181,7 @@ namespace TerrainTools
             while (enumerator.MoveNext())
             {
                 GoodAmount current = enumerator.Current;
-                stockpile.Inventory.Take(current);
+                stockpile.Inventory.TakeExisting(current);
             }
 
             // Set new good
@@ -183,7 +191,7 @@ namespace TerrainTools
             // Give amount
             if (amount > 0)
             {
-                stockpile.Inventory.Give(new GoodAmount(goodId, amount));
+                stockpile.Inventory.GiveExisting(new GoodAmount(goodId, amount));
             }
         }
     }

@@ -1,4 +1,3 @@
-using Timberborn.BaseComponentSystem;
 using UnityEngine;
 
 namespace TerrainTools.PathPainter
@@ -12,11 +11,28 @@ namespace TerrainTools.PathPainter
             Highlighted
         }
 
-        [SerializeField] private Renderer _renderer;
-        [SerializeField] private Collider _collider;
-        [SerializeField] private Color _baseColor;
-        [SerializeField] private Color _hoverColor;
-        [SerializeField] private Color _highlightColor;
+        private Renderer _renderer;
+        private Collider _collider;
+        private Color _baseColor;
+        private Color _hoverColor;
+        private Color _highlightColor;
+
+        public void Initialize(Color baseColor, Color hoverColor, Color highlightColor)
+        {
+            _renderer = GetComponentInChildren<Renderer>();
+            _collider = GetComponentInChildren<Collider>();
+
+            if (_renderer == null)
+                throw new MissingComponentException("LinePoint is missing a Renderer component in its children.");
+            if (_collider == null)
+                throw new MissingComponentException("LinePoint is missing a Collider component in its children.");
+
+            _baseColor = baseColor;
+            _hoverColor = hoverColor;
+            _highlightColor = highlightColor;
+
+            SetState(State.Idle);
+        }
 
         public Vector3 Position
         {

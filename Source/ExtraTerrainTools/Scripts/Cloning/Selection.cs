@@ -214,10 +214,12 @@ namespace TerrainTools.Cloning
             // TODO: Investigate caching the result to avoid allocating new keyvaluepairs on each call
             foreach (var (coordinates, isTerrain) in _terrainInternal)
             {
-                yield return new(
-                    _origin + TransformLocal(coordinates),
-                    isTerrain
-                );
+                var worldCoordinates = _origin + TransformLocal(coordinates);
+                if (_terrainService.Contains(worldCoordinates))
+                    yield return new(
+                        worldCoordinates,
+                        isTerrain
+                    );
             }
         }
 
@@ -293,16 +295,18 @@ namespace TerrainTools.Cloning
                     objOrientation = Add(objOrientation, _orientation);
                 }
 
-                yield return new BlockObjectData
-                {
-                    TemplateName = obj.TemplateName,
-                    Coordinates = _origin + localCoordinates,
-                    Orientation = objOrientation,
-                    FlipMode = objFlipMode,
-                    Growth = obj.Growth,
-                    GoodId = obj.GoodId,
-                    GoodAmount = obj.GoodAmount
-                };
+                var worldCoordinates = _origin + localCoordinates;
+                if (_terrainService.Contains(worldCoordinates))
+                    yield return new BlockObjectData
+                    {
+                        TemplateName = obj.TemplateName,
+                        Coordinates = worldCoordinates,
+                        Orientation = objOrientation,
+                        FlipMode = objFlipMode,
+                        Growth = obj.Growth,
+                        GoodId = obj.GoodId,
+                        GoodAmount = obj.GoodAmount
+                    };
             }
         }
 

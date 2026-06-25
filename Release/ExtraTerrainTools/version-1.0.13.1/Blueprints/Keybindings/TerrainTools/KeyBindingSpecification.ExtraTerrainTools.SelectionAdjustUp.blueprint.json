@@ -1,0 +1,14 @@
+{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionAdjustUp",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.AdjustUp",
+		"Order": 184,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/pageUp",
+		"Unchangeable": false
+	}
+}

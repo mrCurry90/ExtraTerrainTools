@@ -1,0 +1,15 @@
+﻿{
+    "KeyBindingSpec": {
+        "Id": "ExtraTerrainTools.SelectionCopy",
+        "GroupId": "TerrainTools",
+        "LocKey": "TerrainTools.Keybinding.Selection.Copy",
+        "Order": 151,
+        "AllowOtherModifiers": false,
+        "DevModeOnly": false
+    },
+    "PrimaryInputBindingSpec": {
+        "Path": "/Keyboard/c",
+        "InputModifiers": "Ctrl",
+        "Unchangeable": false
+    }
+}

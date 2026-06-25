@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4599349747334259372}
-  - component: {fileID: 4100989037500241850}
   m_Layer: 0
   m_Name: Point
   m_TagString: Untagged
@@ -34,23 +33,6 @@ Transform:
   - {fileID: 7955129120574744315}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4100989037500241850
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 595785127277152542}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3daff79a05849944eba7bf84a6af1d33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _renderer: {fileID: 419484351482401755}
-  _collider: {fileID: 3251394830267753465}
-  _baseColor: {r: 0.7529412, g: 0, b: 0, a: 1}
-  _hoverColor: {r: 1, g: 0, b: 0, a: 1}
-  _highlightColor: {r: 1, g: 0.5019608, b: 0.5019608, a: 1}
 --- !u!1 &3047278513485468722
 GameObject:
   m_ObjectHideFlags: 0
@@ -202,4 +184,5 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}

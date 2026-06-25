@@ -4,10 +4,10 @@ using Timberborn.Common;
 using Unity.Mathematics;
 using UnityEngine.Splines;
 using UnityEngine;
-using System.IO;
 using Timberborn.SingletonSystem;
 using System;
 using Object = UnityEngine.Object;
+using Timberborn.BlueprintSystem;
 
 namespace TerrainTools.PathPainter
 {
@@ -22,18 +22,12 @@ namespace TerrainTools.PathPainter
     public class SplineDrawer : ILoadableSingleton, IPostLoadableSingleton
     {
         private const float TWO_THIRDS = 2f / 3f;
-        private static readonly string prefabSubpath = "Line";
-        private static readonly string ctrlPointPrefabName = "Point";
-        private static readonly string ctrlLinePrefabName = "Dashed";
-        private static readonly string splineLinePrefabName = "Solid";
-        private static LinePoint controlPointPrefab = null;
-        private static LineRenderer controlLinePrefab = null;
-        private static LineRenderer splineLinePrefab = null;
         private LineRenderer _splineLine;
         private List<LinePoint> _controlPoints = new();
         private List<LineRenderer> _controlLines = new();
-        private TerrainToolsAssetService _assetService;
+        private ISpecService _specService;
 
+        private SplineDrawerSpec _spec;
         private Spline _spline = new();
         public Spline Spline { get { return _spline; } }
         private SplineDrawerMode _mode;
@@ -79,36 +73,20 @@ namespace TerrainTools.PathPainter
         public event Action<Spline> SplineRebuilt;
         public ReadOnlyList<LinePoint> ControlPoints { get { return _controlPoints.AsReadOnlyList(); } }
 
-        public SplineDrawer(TerrainToolsAssetService assetService)
+
+        public SplineDrawer(ISpecService specService)
         {
-            _assetService = assetService;
+            _specService = specService;
         }
 
         public void Load()
         {
-            TerrainToolsAssetService.Folder prefabsFolder = TerrainToolsAssetService.Folder.Prefabs;
-            string path;
-
-            if (controlPointPrefab == null)
-            {
-                path = Path.Combine(prefabSubpath, ctrlPointPrefabName);
-                controlPointPrefab = _assetService.Fetch<LinePoint>(path, prefabsFolder);
-            }
-            if (controlLinePrefab == null)
-            {
-                path = Path.Combine(prefabSubpath, ctrlLinePrefabName);
-                controlLinePrefab = _assetService.Fetch<LineRenderer>(path, prefabsFolder);
-            }
-            if (splineLinePrefab == null)
-            {
-                path = Path.Combine(prefabSubpath, splineLinePrefabName);
-                splineLinePrefab = _assetService.Fetch<LineRenderer>(path, prefabsFolder);
-            }
+            _spec = _specService.GetSingleSpec<SplineDrawerSpec>() ?? throw new MissingReferenceException("Failed to load SplineDrawerSpec");
         }
 
         public void PostLoad()
         {
-            _splineLine = Instantiate(splineLinePrefab).GetComponent<LineRenderer>();
+            _splineLine = Instantiate(_spec.SolidLinePrefab.Asset).GetComponent<LineRenderer>();
             _splineLine.enabled = false;
 
             ApplyDrawMode();
@@ -119,7 +97,7 @@ namespace TerrainTools.PathPainter
             if (_controlPoints.Count >= _maxControlPoints)
                 return;
 
-            LinePoint linePoint = Instantiate(controlPointPrefab).GetComponent<LinePoint>();
+            var linePoint = InstantiateControlPoint();
             linePoint.Position = point;
             linePoint.SetState(LinePoint.State.Idle);
 
@@ -263,7 +241,7 @@ namespace TerrainTools.PathPainter
                 }
                 else
                 {
-                    line = Instantiate(controlLinePrefab).GetComponent<LineRenderer>();
+                    line = Instantiate(_spec.DashedLinePrefab.Asset).GetComponent<LineRenderer>();
                     _controlLines.Add(line);
                 }
                 RenderLine(line, _controlPoints[cur], _controlPoints[next]);
@@ -512,6 +490,14 @@ namespace TerrainTools.PathPainter
                     last.transform.LookAt(point);
                     return;
             }
+        }
+
+        private LinePoint InstantiateControlPoint()
+        {
+            var go = Instantiate(_spec.LinePointPrefab.Asset);
+            var linePoint = go.AddComponent<LinePoint>();
+            linePoint.Initialize(_spec.BaseColor, _spec.HoverColor, _spec.HighlightColor);
+            return linePoint;
         }
 
         // Gameobject wrappers for cleaner code

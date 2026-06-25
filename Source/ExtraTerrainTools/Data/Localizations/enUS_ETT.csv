@@ -6,14 +6,13 @@ TerrainTools.Keybinding.FastUndo,Undo x 5,Fast Undo keybinding name (CTRL SHIFT 
 TerrainTools.Keybinding.Redo,Redo,Redo keybinding name (CTRL Y)
 TerrainTools.Keybinding.FastRedo,Redo x 5,Fast Redo keybinding name (CTRL SHIFT Y)
 TerrainTools.Keybinding.CycleMode,Cycle Mode,"Cycle Mode keybinding name, used by Mound Maker"
-TerrainTools.Keybinding.Selection.PosUp,Move Selection Up,Selection Position Up keybinding name
-TerrainTools.Keybinding.Selection.PosDown,Move Selection Down,Selection Position Down keybinding name
-TerrainTools.Keybinding.Selection.PosForward,Move Selection Forward,Selection Position Forward keybinding name
-TerrainTools.Keybinding.Selection.PosBack,Move Selection Back,Selection Position Back keybinding name
-TerrainTools.Keybinding.Selection.PosLeft,Move Selection Left,Selection Position Left keybinding name
-TerrainTools.Keybinding.Selection.PosRight,Move Selection Right,Selection Position Right keybinding name
-TerrainTools.Keybinding.Selection.HeightUp,Raise Selection Height,Selection Height Up keybinding name
-TerrainTools.Keybinding.Selection.HeightDown,Lower Selection Height,Selection Height Down keybinding name
+TerrainTools.Keybinding.Selection.AdjustUp,Adjust Selection Up,Selection Adjust Up keybinding name
+TerrainTools.Keybinding.Selection.AdjustDown,Adjust Selection Down,Selection Adjust Down keybinding name
+TerrainTools.Keybinding.Selection.AdjustForward,Adjust Selection Forward,Selection Adjust Forward keybinding name
+TerrainTools.Keybinding.Selection.AdjustBack,Adjust Selection Back,Selection Adjust Back keybinding name
+TerrainTools.Keybinding.Selection.AdjustLeft,Adjust Selection Left,Selection Adjust Left keybinding name
+TerrainTools.Keybinding.Selection.AdjustRight,Adjust Selection Right,Selection Adjust Right keybinding name
+TerrainTools.Keybinding.Selection.AdjustModifier,Adjust Selection Size (Hold),Selection Adjust Modifier keybinding name
 TerrainTools.Keybinding.Selection.Copy,Copy Selection,Selection Copy keybinding name
 TerrainTools.Keybinding.Selection.Cut,Cut Selection,Selection Cut keybinding name
 TerrainTools.Keybinding.Selection.Paste,Paste Selection,Selection Paste keybinding name
@@ -97,13 +96,14 @@ TerrainTools.CloneTool.InputGroup.Paste,Paste,Label for input group describing p
 TerrainTools.CloneTool.InputGroup.Rotate,Rotate,Label for input group describing rotate action
 TerrainTools.CloneTool.InputGroup.Flip,Flip,Label for input group describing flip action
 TerrainTools.CloneTool.InputGroup.PositionTrim,Trim position,Label for input group describing position trim
-TerrainTools.CloneTool.InputGroup.HeightTrim,Trim height,Label for input group describing height trim
+TerrainTools.CloneTool.InputGroup.SizeTrim,Trim size,Label for input group describing size trim
 TerrainTools.CloneTool.InputGroup.Reset,Reset,Label for input group describing reset action
 TerrainTools.CloneTool.InputDesciption.LeftClick,Left click,Description for left mouse click action
 TerrainTools.CloneTool.InputDesciption.RightClick,Right click,Description for right mouse click action
 TerrainTools.CloneTool.InputDesciption.ClickAndDrag,Click and drag,Description for click and drag action
 TerrainTools.CloneTool.InputDesciption.MouseScroll,Mouse scroll,Description for mouse scroll action
-TerrainTools.CloneTool.InputDesciption.Hold,Hold,Description for hold action
+TerrainTools.CloneTool.InputDesciption.Hold,Hold {0},Description for hold action {0} is replaced by the action
+TerrainTools.CloneTool.InputDesciption.HoldAnd,Hold {0} and {1},Description for a two-step action
 TerrainTools.CloneTool.ToolTip.Start,Select base,Tooltip for the Start phase of the Clone Tool
 TerrainTools.CloneTool.ToolTip.Base,Select base,Tooltip for the Base phase of the Clone Tool
 TerrainTools.CloneTool.ToolTip.Height,Select height,Tooltip for the Height phase of the Clone Tool

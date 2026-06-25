@@ -125,20 +125,24 @@ namespace TerrainTools
         private void ToggleSimPanel(bool state)
         {
             if (_mapEditorSimPanel == null)
-            {
-                // Super hacky search for the sim panel
-                var uIDocuments = Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
-                foreach (var uiDoc in uIDocuments)
-                {
-                    var result = uiDoc.rootVisualElement.Q("MapEditorSimulationPanel");
-                    if (result != null)
-                    {
-                        _mapEditorSimPanel = result;
-                    }
-                }
-            }
+                _mapEditorSimPanel = FindSimPanel();
 
             _mapEditorSimPanel?.SetEnabled(state);
+        }
+
+        private VisualElement FindSimPanel()
+        {
+            // Super hacky search for the sim panel
+            var uIDocuments = Object.FindObjectsByType<UIDocument>();
+            foreach (var uiDoc in uIDocuments)
+            {
+                var result = uiDoc.rootVisualElement.Q("MapEditorSimulationPanel");
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return null;
         }
 
         private List<EntityComponent> GetEntityList()

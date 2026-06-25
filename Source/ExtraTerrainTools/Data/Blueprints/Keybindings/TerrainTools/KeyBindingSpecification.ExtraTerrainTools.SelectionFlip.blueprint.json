@@ -1,14 +1,15 @@
-﻿{
-	"KeyBindingSpec": {
-		"Id": "ExtraTerrainTools.SelectionFlip",
-		"GroupId": "TerrainTools",
-		"LocKey": "TerrainTools.Keybinding.Selection.Flip",
-		"Order": 162,
-		"AllowOtherModifiers": false,
-		"DevModeOnly": false
-	},
-	"PrimaryInputBindingSpec": {
-		"Path": "/Keyboard/f",
-		"Unchangeable": false
-	}
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.SelectionFlip",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.Selection.Flip",
+    "Order": 162,
+    "AllowOtherModifiers": false,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/f",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using static TerrainTools.Cloning.In;
 
 namespace TerrainTools.Cloning
 {
@@ -7,14 +8,15 @@ namespace TerrainTools.Cloning
     {
         #region Key Constants         
         // Defined as Blueprints > Keybindings
-        public const string KEY_HEIGHT_UP = "ExtraTerrainTools.SelectionHeightUp";
-        public const string KEY_HEIGHT_DOWN = "ExtraTerrainTools.SelectionHeightDown";
-        public const string KEY_POS_FORWARD = "ExtraTerrainTools.SelectionPosForward";
-        public const string KEY_POS_BACKWARD = "ExtraTerrainTools.SelectionPosBack";
-        public const string KEY_POS_LEFT = "ExtraTerrainTools.SelectionPosLeft";
-        public const string KEY_POS_RIGHT = "ExtraTerrainTools.SelectionPosRight";
-        public const string KEY_POS_UP = "ExtraTerrainTools.SelectionPosUp";
-        public const string KEY_POS_DOWN = "ExtraTerrainTools.SelectionPosDown";
+        // Consolidated adjustment keys. Use Shift modifier to toggle between Position (no modifier)
+        // and Size (Shift held).
+        public const string KEY_ADJUST_LEFT = "ExtraTerrainTools.SelectionAdjustLeft";
+        public const string KEY_ADJUST_RIGHT = "ExtraTerrainTools.SelectionAdjustRight";
+        public const string KEY_ADJUST_FORWARD = "ExtraTerrainTools.SelectionAdjustForward";
+        public const string KEY_ADJUST_BACKWARD = "ExtraTerrainTools.SelectionAdjustBack";
+        public const string KEY_ADJUST_UP = "ExtraTerrainTools.SelectionAdjustUp";
+        public const string KEY_ADJUST_DOWN = "ExtraTerrainTools.SelectionAdjustDown";
+        public const string KEY_ADJUST_MODIFIER = "ExtraTerrainTools.SelectionAdjustModifier";
         public const string KEY_COPY = "ExtraTerrainTools.SelectionCopy";
         public const string KEY_CUT = "ExtraTerrainTools.SelectionCut";
         public const string KEY_PASTE = "ExtraTerrainTools.SelectionPaste";
@@ -37,7 +39,7 @@ namespace TerrainTools.Cloning
         public const string GROUP_ROTATE = "TerrainTools.CloneTool.InputGroup.Rotate";
         public const string GROUP_FLIP = "TerrainTools.CloneTool.InputGroup.Flip";
         public const string GROUP_POSITION_TRIM = "TerrainTools.CloneTool.InputGroup.PositionTrim";
-        public const string GROUP_HEIGHT_TRIM = "TerrainTools.CloneTool.InputGroup.HeightTrim";
+        public const string GROUP_SIZE_TRIM = "TerrainTools.CloneTool.InputGroup.SizeTrim";
         public const string GROUP_RESET = "TerrainTools.CloneTool.InputGroup.Reset";
         #endregion
 
@@ -48,6 +50,7 @@ namespace TerrainTools.Cloning
         public const string ACTION_CLICK_N_DRAG = "TerrainTools.CloneTool.InputDesciption.ClickAndDrag";
         public const string ACTION_MOUSE_SCROLL = "TerrainTools.CloneTool.InputDesciption.MouseScroll";
         public const string ACTION_HOLD = "TerrainTools.CloneTool.InputDesciption.Hold";
+        public const string ACTION_HOLD_AND = "TerrainTools.CloneTool.InputDesciption.HoldAnd";
 
         #endregion
 
@@ -57,88 +60,96 @@ namespace TerrainTools.Cloning
 
         public CloneToolInputDescriber()
         {
-            var builder = new CloneToolInputGroup.Builder();
             _phaseInputsMap = new()
             {
                 {
                     CloneToolPhase.Start, new List<CloneToolInputGroup>
                     {
-                        builder
-                            .SetDescription(GROUP_SELECT).SetOrder(1)
-                            .AddDescriptionInput(ACTION_CLICK_N_DRAG)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_CANCEL).SetOrder(2)
-                            .AddDescriptionInput(ACTION_RIGHT_CLICK)
-                            .BuildAndClear(),
+                        CloneToolInputGroup.DescribedAs(GROUP_SELECT)
+                            .OrderedBy(1)
+                            .PerformedBy(TextInput(ACTION_CLICK_N_DRAG)),
+                        CloneToolInputGroup.DescribedAs(GROUP_CANCEL)
+                            .OrderedBy(2)
+                            .PerformedBy(TextInput(ACTION_RIGHT_CLICK)),
                     }
                 },
                 {
                     CloneToolPhase.Base, new List<CloneToolInputGroup>
                     {
-                        builder.SetDescription(GROUP_SELECT).SetOrder(1)
-                            .AddDescriptionInput(ACTION_CLICK_N_DRAG)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_CANCEL).SetOrder(2)
-                            .AddDescriptionInput(ACTION_RIGHT_CLICK)
-                            .BuildAndClear(),
+                        CloneToolInputGroup.DescribedAs(GROUP_SELECT)
+                            .OrderedBy(1)
+                            .PerformedBy(TextInput(ACTION_CLICK_N_DRAG)),
+                        CloneToolInputGroup.DescribedAs(GROUP_CANCEL)
+                            .OrderedBy(2)
+                            .PerformedBy(TextInput(ACTION_RIGHT_CLICK)),
                     }
                 },
                 {
                     CloneToolPhase.Height, new List<CloneToolInputGroup>
                     {
-                        builder.SetDescription(GROUP_HEIGHT_SELECT).SetOrder(1)
-                            .AddDescriptionInput(ACTION_MOUSE_SCROLL)
-                            .AddKeybindInput(KEY_HEIGHT_UP)
-                            .AddKeybindInput(KEY_HEIGHT_DOWN)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_CONFIRM).SetOrder(2)
-                            .AddDescriptionInput(ACTION_LEFT_CLICK)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_CANCEL).SetOrder(3)
-                            .AddDescriptionInput(ACTION_RIGHT_CLICK)
-                            .BuildAndClear(),
+                        CloneToolInputGroup.DescribedAs(GROUP_HEIGHT_SELECT)
+                            .OrderedBy(1)
+                            .PerformedBy(
+                                TextInput(ACTION_MOUSE_SCROLL)
+                            ),
+                        CloneToolInputGroup.DescribedAs(GROUP_SIZE_TRIM)
+                            .OrderedBy(2)
+                            .PerformedBy(
+                                KeyInput(KEY_ADJUST_LEFT),
+                                KeyInput(KEY_ADJUST_RIGHT),
+                                KeyInput(KEY_ADJUST_FORWARD),
+                                KeyInput(KEY_ADJUST_BACKWARD),
+                                KeyInput(KEY_ADJUST_UP),
+                                KeyInput(KEY_ADJUST_DOWN)
+                            ),
+                        CloneToolInputGroup.DescribedAs(GROUP_CONFIRM)
+                            .OrderedBy(3)
+                            .PerformedBy(TextInput(ACTION_LEFT_CLICK)),
+                        CloneToolInputGroup.DescribedAs(GROUP_CANCEL)
+                            .OrderedBy(4)
+                            .PerformedBy(TextInput(ACTION_RIGHT_CLICK)),
                     }
                 },
                 {
                     CloneToolPhase.MoveApply, new List<CloneToolInputGroup>
                     {
-                        builder.SetDescription(GROUP_MOVE_SELECTION).SetOrder(1)
-                            .AddDescriptionInput(ACTION_CLICK_N_DRAG)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_CUT).SetOrder(2)
-                            .AddKeybindInput(KEY_CUT)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_COPY).SetOrder(3)
-                            .AddKeybindInput(KEY_COPY)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_PASTE).SetOrder(4)
-                            .AddKeybindInput(KEY_PASTE)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_ROTATE).SetOrder(5)
-                            .AddKeybindInput(KEY_ROTATE_CW)
-                            .AddKeybindInput(KEY_ROTATE_CCW)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_FLIP).SetOrder(6)
-                            .AddKeybindInput(KEY_FLIP)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_HEIGHT_TRIM).SetOrder(7)
-                            .AddKeybindInput(KEY_HEIGHT_UP)
-                            .AddKeybindInput(KEY_HEIGHT_DOWN)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_POSITION_TRIM).SetOrder(8)
-                            .AddKeybindInput(KEY_POS_LEFT)
-                            .AddKeybindInput(KEY_POS_RIGHT)
-                            .AddKeybindInput(KEY_POS_FORWARD)
-                            .AddKeybindInput(KEY_POS_BACKWARD)
-                            .AddKeybindInput(KEY_POS_UP)
-                            .AddKeybindInput(KEY_POS_DOWN)
-                            .BuildAndClear(),
-                        builder.SetDescription(GROUP_RESET).SetOrder(9)
-                            .AddInput(ACTION_HOLD, KEY_RESET)
-                            .BuildAndClear(),
+                        CloneToolInputGroup.DescribedAs(GROUP_MOVE_SELECTION)
+                            .OrderedBy(1)
+                            .PerformedBy(TextInput(ACTION_CLICK_N_DRAG)),
+                        CloneToolInputGroup.DescribedAs(GROUP_CUT)
+                            .OrderedBy(2)
+                            .PerformedBy(KeyInput(KEY_CUT)),
+                        CloneToolInputGroup.DescribedAs(GROUP_COPY)
+                            .OrderedBy(3)
+                            .PerformedBy(KeyInput(KEY_COPY)),
+                        CloneToolInputGroup.DescribedAs(GROUP_PASTE)
+                            .OrderedBy(4)
+                            .PerformedBy(KeyInput(KEY_PASTE)),
+                        CloneToolInputGroup.DescribedAs(GROUP_ROTATE)
+                            .OrderedBy(5)
+                            .PerformedBy(KeyInput(KEY_ROTATE_CW), KeyInput(KEY_ROTATE_CCW)),
+                        CloneToolInputGroup.DescribedAs(GROUP_FLIP)
+                            .OrderedBy(6)
+                            .PerformedBy(KeyInput(KEY_FLIP)),
+                        CloneToolInputGroup.DescribedAs(GROUP_POSITION_TRIM)
+                            .OrderedBy(7)
+                            .PerformedBy(
+                                KeyInput(KEY_ADJUST_LEFT),
+                                KeyInput(KEY_ADJUST_RIGHT),
+                                KeyInput(KEY_ADJUST_FORWARD),
+                                KeyInput(KEY_ADJUST_BACKWARD),
+                                KeyInput(KEY_ADJUST_UP),
+                                KeyInput(KEY_ADJUST_DOWN)
+                            ),
+                        CloneToolInputGroup.DescribedAs(GROUP_SIZE_TRIM)
+                            .OrderedBy(8)
+                            .PerformedBy(FormattedInput(ACTION_HOLD_AND, Keybind(KEY_ADJUST_MODIFIER), Text(GROUP_POSITION_TRIM))),
+                        CloneToolInputGroup.DescribedAs(GROUP_RESET)
+                            .OrderedBy(9)
+                            .PerformedBy(FormattedInput(ACTION_HOLD, Keybind(KEY_RESET))),
                     }
                 }
-            };
+        };
 
             AllInputGroups = new(_phaseInputsMap);
         }

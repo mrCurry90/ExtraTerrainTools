@@ -1,0 +1,15 @@
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.SelectionAdjustRight",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.Selection.AdjustRight",
+    "Order": 183,
+    "AllowOtherModifiers": true,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/rightArrow",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
+}

@@ -1,0 +1,14 @@
+{
+	"KeyBindingSpec": {
+		"Id": "ExtraTerrainTools.SelectionReset",
+		"GroupId": "TerrainTools",
+		"LocKey": "TerrainTools.Keybinding.Selection.Reset",
+		"Order": 170,
+		"AllowOtherModifiers": true,
+		"DevModeOnly": false
+	},
+	"PrimaryInputBindingSpec": {
+		"Path": "/Keyboard/backspace",
+		"Unchangeable": false
+	}
+}

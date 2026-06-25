@@ -22,6 +22,7 @@ using Timberborn.UndoSystem;
 using Timberborn.WaterSourceSystem;
 using UnityEngine;
 using Timberborn.Stockpiles;
+using Timberborn.BlueprintSystem;
 
 namespace TerrainTools.Cloning
 {
@@ -52,7 +53,6 @@ namespace TerrainTools.Cloning
 
         // Dependencies
         private readonly InputService _inputService;
-        private readonly TerrainToolsAssetService _assetService;
         private readonly CameraService _cameraService;
         private readonly TerrainPicker _terrainPicker;
         private readonly IBlockService _blockService;
@@ -61,11 +61,14 @@ namespace TerrainTools.Cloning
         private readonly TerrainToolsManipulationService _manipulationService;
         private readonly KeyBindingRegistry _keyBindingRegistry;
         private readonly MarkerDrawerFactory _markerDrawerFactory;
+        private readonly ISpecService _specService;
 
         // Colors for visualization        
         // Selection box
         private readonly Color _selectModeFrameColor = new(0f, 0.8f, 1f, 1f);
-        private readonly Color _adjustModeFrameColor = new(0.2f, 1f, 0.2f, 1f);
+        private readonly Color _adjustPositionFrameColor = new(0.2f, 1f, 0.2f, 1f);
+        private readonly Color _adjustSizeFrameColor = new(1f, 0.8f, 0.2f, 1f);
+
         // Content previews
         // Terrain 
         // private readonly Color _terrainAddColor = new(0.360f, 0.243f, 0.164f, 1f); // Brown
@@ -90,8 +93,7 @@ namespace TerrainTools.Cloning
         // Private fields
         // Selection box
         private readonly Vector3 _gridCenterOffset = new(0.5f, 0.5f, 0.5f);
-        private readonly string _selectionBoxPrefabPath = "SelectionBox";
-        private SelectionBox _selectionBoxPrefab;
+        private SelectionBoxSpec _selectionBoxSpec;
         private SelectionBox _selectionBox;
         private int _selectionBoxHeight = 0;
 
@@ -113,9 +115,14 @@ namespace TerrainTools.Cloning
         private MeshDrawer _largeBlockDrawer;
         private const float PREVIEW_VERT_OFFSET = 0.02f;
 
+        // Keyboard input throttling (for IsLongHeld repeat rate)
+        private float _adjustFrameTimer = 0f;
+        private float _adjustTimerNextTick = 0f;
+        private const float MAX_REPEAT_DELAY = 1f / 10f;
+        private const float MIN_REPEAT_DELAY = 1f / 60f;
+        private const float ACCELERATION_TIME = 2f;    // Time to reach minimum repeat delay with smoothing
         public CloneTool(
             InputService inputService,
-            TerrainToolsAssetService assetService,
             CameraService cameraService,
             TerrainPicker terrainPicker,
             IBlockService blockService,
@@ -124,11 +131,11 @@ namespace TerrainTools.Cloning
             KeyBindingRegistry keyBindingRegistry,
             TerrainToolsManipulationService manipulationService,
             MarkerDrawerFactory markerDrawerFactory,
+            ISpecService specService,
             ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
-            _assetService = assetService;
             _cameraService = cameraService;
             _terrainPicker = terrainPicker;
             _blockService = blockService;
@@ -137,7 +144,7 @@ namespace TerrainTools.Cloning
             _keyBindingRegistry = keyBindingRegistry;
             _manipulationService = manipulationService;
             _markerDrawerFactory = markerDrawerFactory;
-
+            _specService = specService;
             _selectionBuffer = new(_terrainService, _blockService, _manipulationService);
         }
 
@@ -147,10 +154,7 @@ namespace TerrainTools.Cloning
                 .AddPrioritizedSection(_loc.T(_keyToolDescription))
                 .Build();
 
-            if (_selectionBoxPrefab == null)
-            {
-                _selectionBoxPrefab = _assetService.Fetch<SelectionBox>(_selectionBoxPrefabPath, TerrainToolsAssetService.Folder.Prefabs);
-            }
+            _selectionBoxSpec = _specService.GetSingleSpec<SelectionBoxSpec>() ?? throw new MissingReferenceException("Failed to load SelectionBoxSpec");
 
             _smallBlockDrawer = _markerDrawerFactory.CreateSmallBlockTileDrawer();
             _largeBlockDrawer = _markerDrawerFactory.CreateLargeBlockTileDrawer();
@@ -164,7 +168,8 @@ namespace TerrainTools.Cloning
         {
             _inputService.AddInputProcessor(this);
 
-            _selectionBox ??= Instantiate(_selectionBoxPrefab).GetComponent<SelectionBox>();
+            _selectionBox ??= Instantiate(_selectionBoxSpec.BoxPrefab.Asset).AddComponent<SelectionBox>();
+            _selectionBox.Initialize(_selectionBoxSpec.BaseColor);
 
             if (_toolPhase < CloneToolPhase.MoveApply)
             {
@@ -221,7 +226,8 @@ namespace TerrainTools.Cloning
 
             if (_toolPhase == CloneToolPhase.MoveApply)
             {
-                DrawBufferPreviews();
+                DrawTerrainPreview();
+                DrawObjectPreviews();
             }
 
             if (_selectedPoints.Count != _lastFramePointCount)
@@ -240,6 +246,8 @@ namespace TerrainTools.Cloning
             _selectionBoxHeight = 0;
             _dragging = false;
             _dragOffset = Vector3Int.zero;
+            _adjustFrameTimer = 0f;
+            _adjustTimerNextTick = 0f;
 
             UpdateToolPhase();
         }
@@ -303,31 +311,27 @@ namespace TerrainTools.Cloning
             if (_selectedPoints.Count < 2) throw new ArgumentOutOfRangeException("_selectedPoints.Count", "Handler for two points called with < 2 selected points.");
 
             bool inputHandled = false;
-            var adjust = _inputService.MouseZoom;
-            if (adjust == 0f)
+            var adjust = Vector3Int.zero;
+            adjust.z = _inputService.MouseZoom > 0f ? 1 : (_inputService.MouseZoom < 0f ? -1 : 0);
+            if (adjust == Vector3Int.zero)
             {
-                if (_inputService.IsKeyDown(InputDescriber.KEY_HEIGHT_UP) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_HEIGHT_UP))
-                    adjust++;
-
-                if (_inputService.IsKeyDown(InputDescriber.KEY_HEIGHT_DOWN) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_HEIGHT_DOWN))
-                    adjust--;
-
-                // If key is held at this stage, we consider input handled to cover the gap between key down and long hold.
-                inputHandled = _inputService.IsKeyHeld(InputDescriber.KEY_HEIGHT_UP) || _inputService.IsKeyHeld(InputDescriber.KEY_HEIGHT_DOWN);
+                if (AnyKeyboardAdjustmentHeld())
+                {
+                    adjust = GetKeyboardAdjustments();
+                    // If key is held at this stage, we consider input handled to cover the gap between key down and long hold.
+                    inputHandled = true;
+                }
             }
 
-            if (adjust != 0f)
+            if (adjust != Vector3Int.zero)
             {
-                if (adjust > 0f)
-                {
-                    _selectionBoxHeight++;
-                }
-                else
-                {
-                    _selectionBoxHeight--;
-                }
+                var p2 = _selectedPoints[1];
+                p2.x += adjust.x;
+                p2.y += adjust.y;
+                _selectedPoints[1] = p2;
+                _selectionBoxHeight += adjust.z;
 
-                var p3 = _selectedPoints[1] + new Vector3Int(0, 0, _selectionBoxHeight);
+                var p3 = p2 + new Vector3Int(0, 0, _selectionBoxHeight);
                 _selectionBox.Set(GridCenterToWorld(_selectedPoints[0]), GridCenterToWorld(p3));
                 inputHandled = true;
             }
@@ -336,7 +340,7 @@ namespace TerrainTools.Cloning
             {
                 var p3 = _selectedPoints[1] + new Vector3Int(0, 0, _selectionBoxHeight);
                 _selectedPoints.Add(p3);
-                _selectionBox.Color = _adjustModeFrameColor;
+                _selectionBox.Color = _adjustPositionFrameColor;
                 UpdateToolPhase();
 
                 inputHandled = true;
@@ -364,6 +368,7 @@ namespace TerrainTools.Cloning
 
             if (_inputService.MainMouseButtonHeld)
             {
+                _selectionBox.Color = _adjustPositionFrameColor;
                 if (HasRayHitTerrain(ray, out var there) || HasRayHitPlane(ray, _selectedPoints.First().z, out there))
                 {
                     if (_inputService.MainMouseButtonDown && HasRayHitSelection(ray))
@@ -396,66 +401,61 @@ namespace TerrainTools.Cloning
                     }
                 }
             }
-            // Adjusting height with keyboard
-            else if (_inputService.IsKeyHeld(InputDescriber.KEY_HEIGHT_UP) || _inputService.IsKeyHeld(InputDescriber.KEY_HEIGHT_DOWN))
+
+            // Adjust Position (move all points) and Size (move far corner only).
+            else if (AnyKeyboardAdjustmentHeld())
             {
-                var adjust = 0;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_HEIGHT_UP) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_HEIGHT_UP))
-                    adjust++;
-
-                if (_inputService.IsKeyDown(InputDescriber.KEY_HEIGHT_DOWN) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_HEIGHT_DOWN))
-                    adjust--;
-
-                if (adjust != 0)
+                bool modifySize = _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_MODIFIER);
+                if (modifySize)
                 {
-                    _selectedPoints[^1] += new Vector3Int(0, 0, adjust);
-                    selectionAdjusted = true;
+                    _selectionBox.Color = _adjustSizeFrameColor;
+                    _smallBlockDrawer.DrawAtCoordinates(
+                        _selectedPoints[^1],
+                        verticalOffset: PREVIEW_VERT_OFFSET,
+                        _adjustSizeFrameColor
+                    );
                 }
-                inputHandled = true;
-            }
-            // Adjusting position with keyboard
-            else if (
-                _inputService.IsKeyHeld(InputDescriber.KEY_POS_FORWARD) || _inputService.IsKeyHeld(InputDescriber.KEY_POS_BACKWARD) ||
-                _inputService.IsKeyHeld(InputDescriber.KEY_POS_LEFT) || _inputService.IsKeyHeld(InputDescriber.KEY_POS_RIGHT) ||
-                _inputService.IsKeyHeld(InputDescriber.KEY_POS_UP) || _inputService.IsKeyHeld(InputDescriber.KEY_POS_DOWN)
-            )
-            {
-                var keyAdjust = Vector3Int.zero;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_FORWARD) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_FORWARD))
-                    keyAdjust.y += 1;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_BACKWARD) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_BACKWARD))
-                    keyAdjust.y -= 1;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_LEFT) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_LEFT))
-                    keyAdjust.x -= 1;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_RIGHT) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_RIGHT))
-                    keyAdjust.x += 1;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_UP) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_UP))
-                    keyAdjust.z += 1;
-                if (_inputService.IsKeyDown(InputDescriber.KEY_POS_DOWN) || _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_POS_DOWN))
-                    keyAdjust.z -= 1;
+                else
+                {
+                    _selectionBox.Color = _adjustPositionFrameColor;
+                }
+
+
+                Vector3Int keyAdjust = GetKeyboardAdjustments();
 
                 if (keyAdjust != Vector3Int.zero)
                 {
-                    var angle = _cameraService.HorizontalAngle % 360;
-                    if (angle < 0) angle += 360;
-
-                    Vector3Int offset = angle switch
+                    Vector3Int offset = CameraRelativeToWorld(keyAdjust);
+                    if (modifySize)
                     {
-                        >= 315 or < 45 => new Vector3Int(keyAdjust.x, keyAdjust.y, keyAdjust.z),    // Facing "forward"
-                        >= 45 and < 135 => new Vector3Int(keyAdjust.y, -keyAdjust.x, keyAdjust.z),   // Facing "right"
-                        >= 135 and < 225 => new Vector3Int(-keyAdjust.x, -keyAdjust.y, keyAdjust.z), // Facing "back"
-                        >= 225 and < 315 => new Vector3Int(-keyAdjust.y, keyAdjust.x, keyAdjust.z),   // Facing "left"
-                        _ => Vector3Int.zero
-                    };
-
-                    for (int i = 0; i < _selectedPoints.Count; i++)
+                        // Size adjustment: move far corner only (last point)
+                        _selectedPoints[^1] += offset;
+                    }
+                    else
                     {
-                        _selectedPoints[i] += offset;
+                        // Position adjustment: move all points, rotated by camera angle for X/Y
+                        for (int i = 0; i < _selectedPoints.Count; i++)
+                        {
+                            _selectedPoints[i] += offset;
+                        }
                     }
 
                     selectionAdjusted = true;
                 }
                 inputHandled = true;
+            }
+            else if (_inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_MODIFIER))
+            {
+                _selectionBox.Color = _adjustSizeFrameColor;
+                _smallBlockDrawer.DrawAtCoordinates(
+                    _selectedPoints[^1],
+                    verticalOffset: PREVIEW_VERT_OFFSET,
+                    _adjustSizeFrameColor
+                );
+            }
+            else
+            {
+                _selectionBox.Color = _adjustPositionFrameColor;
             }
 
             if (selectionAdjusted)
@@ -480,36 +480,12 @@ namespace TerrainTools.Cloning
 
         private bool HandleShortcuts()
         {
-            if (_inputService.IsKeyDown(InputDescriber.KEY_COPY))
-            {
-                Copy();
-                return true;
-            }
-            else if (_inputService.IsKeyDown(InputDescriber.KEY_CUT))
-            {
-                Cut();
-                return true;
-            }
-            else if (_inputService.IsKeyDown(InputDescriber.KEY_PASTE))
-            {
-                Paste();
-                return true;
-            }
-            else if (_inputService.IsKeyDown(InputDescriber.KEY_ROTATE_CW))
-            {
-                Rotate(clockwise: true);
-                return true;
-            }
-            else if (_inputService.IsKeyDown(InputDescriber.KEY_ROTATE_CCW))
-            {
-                Rotate(clockwise: false);
-                return true;
-            }
-            else if (_inputService.IsKeyDown(InputDescriber.KEY_FLIP))
-            {
-                Flip();
-                return true;
-            }
+            if (_inputService.IsKeyDown(InputDescriber.KEY_COPY)) { Copy(); return true; }
+            else if (_inputService.IsKeyDown(InputDescriber.KEY_CUT)) { Cut(); return true; }
+            else if (_inputService.IsKeyDown(InputDescriber.KEY_PASTE)) { Paste(); return true; }
+            else if (_inputService.IsKeyDown(InputDescriber.KEY_ROTATE_CW)) { Rotate(clockwise: true); return true; }
+            else if (_inputService.IsKeyDown(InputDescriber.KEY_ROTATE_CCW)) { Rotate(clockwise: false); return true; }
+            else if (_inputService.IsKeyDown(InputDescriber.KEY_FLIP)) { Flip(); return true; }
 
             return false;
         }
@@ -586,10 +562,10 @@ namespace TerrainTools.Cloning
                         }
                     );
                 }
-                catch (InvalidOperationException ex)
+                catch (InvalidOperationException)
                 {
                     Utils.Log(objectData.ToString());
-                    throw ex;
+                    throw;
                 }
             }
 
@@ -627,12 +603,6 @@ namespace TerrainTools.Cloning
             }
         }
 
-        private void DrawBufferPreviews()
-        {
-            DrawTerrainPreview();
-            DrawObjectPreviews();
-        }
-
         private void DrawTerrainPreview()
         {
             foreach (var (coord, shouldAddTerrain) in _selectionBuffer.GetTerrain())
@@ -664,6 +634,102 @@ namespace TerrainTools.Cloning
                     }
                 }
             }
+        }
+
+        private bool AnyKeyboardAdjustmentHeld()
+        {
+            return _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_FORWARD) || _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_BACKWARD)
+                || _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_LEFT) || _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_RIGHT)
+                || _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_UP) || _inputService.IsKeyHeld(InputDescriber.KEY_ADJUST_DOWN);
+        }
+
+        private Vector3Int GetKeyboardAdjustments()
+        {
+            var adjust = Vector3Int.zero;
+
+            // Immediate key down adjustments
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_FORWARD))
+                adjust.y++;
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_BACKWARD))
+                adjust.y--;
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_LEFT))
+                adjust.x--;
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_RIGHT))
+                adjust.x++;
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_UP))
+                adjust.z++;
+            if (_inputService.IsKeyDown(InputDescriber.KEY_ADJUST_DOWN))
+                adjust.z--;
+
+            // Throttled repeats for long-held keys
+            if (adjust == Vector3Int.zero)
+            {
+                bool anyAdjustHeld =
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_FORWARD) ||
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_BACKWARD) ||
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_LEFT) ||
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_RIGHT) ||
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_UP) ||
+                    _keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_DOWN);
+
+                if (ShouldApplyThrottledAdjustment(anyAdjustHeld))
+                {
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_FORWARD))
+                        adjust.y++;
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_BACKWARD))
+                        adjust.y--;
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_LEFT))
+                        adjust.x--;
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_RIGHT))
+                        adjust.x++;
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_UP))
+                        adjust.z++;
+                    if (_keyBindingRegistry.IsLongHeld(InputDescriber.KEY_ADJUST_DOWN))
+                        adjust.z--;
+                }
+            }
+
+            return adjust;
+        }
+
+        private bool ShouldApplyThrottledAdjustment(bool isCurrentlyHeld)
+        {
+            if (!isCurrentlyHeld)
+            {
+                _adjustFrameTimer = 0f;
+                _adjustTimerNextTick = 0f;
+                return false;
+            }
+
+            // Key is held, apply throttling
+            _adjustFrameTimer += Time.unscaledDeltaTime;
+
+            if (_adjustFrameTimer >= _adjustTimerNextTick)
+            {
+                float t = Mathf.Clamp01(_adjustFrameTimer / ACCELERATION_TIME);
+                float repeatDelay = Mathf.SmoothStep(MAX_REPEAT_DELAY, MIN_REPEAT_DELAY, t);
+                _adjustTimerNextTick = _adjustFrameTimer + repeatDelay;
+                return true;
+            }
+
+            return false;
+        }
+
+        private Vector3Int CameraRelativeToWorld(Vector3Int keyAdjust)
+        {
+
+            var angle = _cameraService.HorizontalAngle % 360;
+            if (angle < 0) angle += 360;
+
+            Vector3Int offset = angle switch
+            {
+                >= 315 or < 45 => new Vector3Int(keyAdjust.x, keyAdjust.y, keyAdjust.z),    // Facing "forward"
+                >= 45 and < 135 => new Vector3Int(keyAdjust.y, -keyAdjust.x, keyAdjust.z),   // Facing "right"
+                >= 135 and < 225 => new Vector3Int(-keyAdjust.x, -keyAdjust.y, keyAdjust.z), // Facing "back"
+                >= 225 and < 315 => new Vector3Int(-keyAdjust.y, keyAdjust.x, keyAdjust.z),   // Facing "left"
+                _ => Vector3Int.zero
+            };
+            return offset;
         }
 
         private Color GetObjectColor(string prefabName)
@@ -746,11 +812,6 @@ namespace TerrainTools.Cloning
         private static T Instantiate<T>(T original) where T : Object
         {
             return Object.Instantiate<T>(original);
-        }
-
-        private static void DestroyObject(Component obj)
-        {
-            Object.Destroy(obj.gameObject);
         }
     }
 }

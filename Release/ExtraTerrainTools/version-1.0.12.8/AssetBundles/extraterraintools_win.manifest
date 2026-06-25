@@ -1,16 +1,16 @@
 ManifestFileVersion: 0
 UnityVersion: 6000.2.8f1
-CRC: 1583700930
+CRC: 784581333
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 251acf51afd14bc0f292ef3800cdd4cf
+    Hash: a75a87b3a3558374d880647270845635
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 8128da8a95cc64ce6d60f1ad31b559d0
+    Hash: ccbcd98c6ef235ab9f111d22bead14ba
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: bb48d09558a5f00c7338c249344cd1e3
+    Hash: 4b2764387f26f32656fe0465050f585b
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -32,6 +32,8 @@ ClassTypes:
 - Class: 65
   Script: {instanceID: 0}
 - Class: 114
+  Script: {fileID: 11998, guid: 0000000000000000e000000000000000, type: 0}
+- Class: 114
   Script: {fileID: 11500000, guid: 3daff79a05849944eba7bf84a6af1d33, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 0804812a75f63254cbcd9da77163e230, type: 3}
@@ -45,7 +47,19 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 213
   Script: {instanceID: 0}
-SerializeReferenceClassIdentifiers: []
+SerializeReferenceClassIdentifiers:
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleComplexSelector
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleProperty
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleRule
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleSelector
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleSelectorPart
+- AssemblyName: UnityEngine.UIElementsModule
+  ClassName: UnityEngine.UIElements.StyleValueHandle
 Assets:
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutCirc.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Line/LinePoint.png
@@ -53,13 +67,14 @@ Assets:
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Line/LinePoint_old.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Prefabs/SelectionBox.prefab
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Materials/Line/LineSolid.mat
-- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutExpo.png
+- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Prefabs/Line/Dashed.prefab
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutQuint.png
-- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutBounce.png
+- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutExpo.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutQuint.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/InQuad.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutCube.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/InQuad.png
+- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutBounce.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/InQuint.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Prefabs/Line/Solid.prefab
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/dashed_square_64.png
@@ -67,7 +82,6 @@ Assets:
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutQuart.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/UI/unlinked_empty.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutElastic.png
-- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Prefabs/Line/Dashed.prefab
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/InQuint.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes/OutBack.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Shaders/SG_SelectionBoxBehind.shadergraph
@@ -95,6 +109,7 @@ Assets:
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutSine.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/InBounce.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Materials/SelectionBoxMaterial.mat
+- Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/UI/TerrainToolsStyle.uss
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/InSine.png
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Shaders/SG_SelectionBox.shadergraph
 - Assets/Mods/ExtraTerrainTools/AssetBundles/Resources/Textures/Slopes_noShadow/OutCirc.png

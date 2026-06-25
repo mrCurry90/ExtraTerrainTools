@@ -167,18 +167,27 @@ namespace TerrainTools.Cloning
             {
                 var input = inputs[i];
 
-                if (input.HasDescription())
+                if (input.Text.Source == InputTextSource.Keybind) // With keybinds we ignore arguments, localization is handled by the game's input system
                 {
-                    builder.Append(Localize(input.DescriptionKey));
+                    builder.Append(_inputBindingDescriber.GetInputBindingText(input.Text.Id));
                 }
-
-                if (input.HasDescription() && input.HasKeybind())
+                else if (input.Arguments == null || input.Arguments.Length == 0)
                 {
-                    builder.Append(" ");
+                    builder.Append(Localize(input.Text.Id));
                 }
+                else // With arguments we use string formatting, arguments can be either keybinds or localized texts
+                {
+                    var desc = Localize(input.Text.Id);
+                    var args = input.Arguments.Select(arg =>
+                    {
+                        if (arg.Source == InputTextSource.Keybind)
+                            return _inputBindingDescriber.GetInputBindingText(arg.Id);
+                        else
+                            return Localize(arg.Id);
+                    }).ToArray();
 
-                if (input.HasKeybind())
-                    builder.Append(_inputBindingDescriber.GetInputBindingText(input.KeybindId));
+                    builder.Append(string.Format(desc, args));
+                }
 
                 if (i < last)
                     builder.Append(",");
