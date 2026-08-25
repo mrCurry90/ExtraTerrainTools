@@ -88,17 +88,20 @@ namespace TerrainTools.NoiseGenerator
 			ClearExisting,
 			UpdateExisting,
 		}
+		private readonly TerrainToolsManipulationService _manipulationService;
 		private readonly ITerrainService _terrainService;
 		private readonly ResetService _resetService;
 		private readonly EventBus _eventBus;
 		private readonly MapSize _mapSize;
 		public NoiseGenerator(
+			TerrainToolsManipulationService manipulationService,
 			ITerrainService terrainService,
 			ResetService resetService,
 			EventBus eventBus,
 			MapSize mapSize
 		)
 		{
+			_manipulationService = manipulationService;
 			_terrainService = terrainService;
 			_resetService = resetService;
 			_eventBus = eventBus;
@@ -202,7 +205,7 @@ namespace TerrainTools.NoiseGenerator
 					);
 
 					h = _terrainService.CellHeight(new Vector2Int(x, y));
-					_terrainService.AdjustTerrain(new Vector3Int(x, y, h), z - h);
+					_manipulationService.AdjustTerrain(new Vector3Int(x, y, h), z - h);
 
 					// I'm working on it!
 					_eventBus.Post(new GeneratorProgressEvent(this, (x + terrainSize.x * y) / n));

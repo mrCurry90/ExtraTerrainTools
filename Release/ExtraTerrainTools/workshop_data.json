@@ -5,6 +5,12 @@
   "UpdateDescription": false,
   "UpdateVisibility": false,
   "UpdatePreview": false,
-  "UpdateTags": false,
-  "Tags": []
+  "UpdateTags": true,
+  "Tags": [
+    "Update 1.1",
+    "Update 1.0",
+    "Update 0.7",
+    "Update 0.6",
+    "Quality of life"
+  ]
 }

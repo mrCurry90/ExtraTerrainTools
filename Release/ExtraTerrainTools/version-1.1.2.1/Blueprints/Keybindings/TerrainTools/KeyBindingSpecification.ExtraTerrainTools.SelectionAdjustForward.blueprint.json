@@ -1,0 +1,15 @@
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.SelectionAdjustForward",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.Selection.AdjustForward",
+    "Order": 180,
+    "AllowOtherModifiers": true,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/upArrow",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
+}

@@ -29,6 +29,7 @@ namespace TerrainTools.SmoothingBrush
         private static readonly Color SampleTileColor = new(0.5f, 0.5f, 0.5f, 0.35f);
 
         private readonly InputService _inputService;
+        private readonly TerrainToolsManipulationService _manipulationService;
         private readonly ITerrainService _terrainService;
         private readonly IBlockService _blockService;
         private readonly TerrainPicker _terrainPicker;
@@ -55,7 +56,7 @@ namespace TerrainTools.SmoothingBrush
         public SmoothingBrushTool(
             InputService inputService, ITerrainService terrainService, IBlockService blockService,
             TerrainPicker terrainPicker, CameraService cameraService, MarkerDrawerFactory markerDrawerFactory,
-            IUndoRegistry undoRegistry, ILoc loc
+            IUndoRegistry undoRegistry, TerrainToolsManipulationService manipulationService, ILoc loc
         ) : base(loc)
         {
             _inputService = inputService;
@@ -64,6 +65,7 @@ namespace TerrainTools.SmoothingBrush
             _terrainPicker = terrainPicker;
             _cameraService = cameraService;
             _markerDrawerFactory = markerDrawerFactory;
+            _manipulationService = manipulationService;
             _undoRegistry = undoRegistry;
 
             Size = 3;
@@ -102,6 +104,7 @@ namespace TerrainTools.SmoothingBrush
                 if (HasRayHitTerrain(ray, out Vector3Int center))
                 {
                     _center = center;
+                    if (_center.z < 0) _center.z = 0;
 
                     if (_timer == 0)
                     {
@@ -126,6 +129,7 @@ namespace TerrainTools.SmoothingBrush
                     if (HasRayHitTerrain(ray, out Vector3Int center))
                     {
                         _center = center;
+                        if (_center.z < 0) _center.z = 0;
                         DrawPreviewTiles();
                     }
                 }
@@ -162,7 +166,7 @@ namespace TerrainTools.SmoothingBrush
 
             foreach (var tuple in updated)
             {
-                _terrainService.AdjustTerrain(tuple.Item1, tuple.Item2);
+                _manipulationService.AdjustTerrain(tuple.Item1, tuple.Item2);
             }
         }
 

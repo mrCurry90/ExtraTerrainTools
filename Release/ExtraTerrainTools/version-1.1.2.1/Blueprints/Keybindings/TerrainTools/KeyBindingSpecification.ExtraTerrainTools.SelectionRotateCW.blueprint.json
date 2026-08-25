@@ -1,0 +1,15 @@
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.SelectionRotateCW",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.Selection.RotateCW",
+    "Order": 160,
+    "AllowOtherModifiers": false,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/r",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
+}

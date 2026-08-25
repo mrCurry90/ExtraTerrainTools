@@ -47,6 +47,9 @@ namespace TerrainTools
         /////// Terrain manipulation ///////
         public void AdjustTerrain(Vector3Int coordinate3D, int adjustBy)
         {
+            if (!_terrainService.Contains(coordinate3D))
+                return;
+
             if (adjustBy == 0)
                 return;
 

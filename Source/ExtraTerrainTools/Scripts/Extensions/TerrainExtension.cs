@@ -5,33 +5,10 @@ namespace TerrainTools
 {
     internal static class TerrainExtensions
     {
-        public static void AdjustTerrain(this ITerrainService service, Vector3Int coordinate3D, int adjustBy)
-        {
-            if (adjustBy == 0)
-                return;
-
-            try
-            {
-                if (adjustBy > 0)
-                {
-                    service.SetTerrain(coordinate3D, adjustBy);
-                }
-                else
-                {
-                    service.UnsetTerrain(coordinate3D, Mathf.Abs(adjustBy) + 1);
-                }
-            }
-            catch (System.Exception e)
-            {
-                Utils.Log("coord: {0}, adjustBy: {1}", coordinate3D, adjustBy);
-                throw e;
-            }
-        }
-
         public static int CellToIndex(this ITerrainService service, Vector2Int coordinates)
         {
             // Source: Timberborn.MapIndexSystem.MapIndexService.Load()
-            int stride = service.Size.x + 2;                    
+            int stride = service.Size.x + 2;
 
             // Source: Timberborn.MapIndexSystem.MapIndexService.CellToIndex()
             return (coordinates.y + 1) * stride + coordinates.x + 1;
