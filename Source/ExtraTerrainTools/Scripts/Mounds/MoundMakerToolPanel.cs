@@ -35,26 +35,34 @@ namespace TerrainTools.MoundMaker
         private Label _seedLabel = null;
         private Toggle _seedLockToggle = null;
 
-        private readonly string _keyCycleSeedTip = "TerrainTools.MoundMaker.Hint.CycleSeed"; // "{0} = Cycle seed"
-        private readonly string _keyDigModeTip = "TerrainTools.MoundMaker.Hint.DigMode"; // "{0} (Hold) = Dig Mode"
+        private readonly string _keyCycleSeedTip = "TerrainTools.MoundMaker.Hint.CycleSeed";
+        private readonly string _keyDigModeTip = "TerrainTools.MoundMaker.Hint.DigMode";
 
-        private readonly string _keyShapeHeader = "TerrainTools.MoundMaker.Header.Shape"; // "Shape" 
-        private readonly string _keyPeakHeightSliderLabel = "TerrainTools.MoundMaker.Slider.PeakHeight"; // "Peak height"
-        private readonly string _keyMaxChangeSliderLabel = "TerrainTools.MoundMaker.Slider.MaxChange"; // "Max change"
+        private readonly string _keyShapeHeader = "TerrainTools.MoundMaker.Header.Shape";
+        private readonly string _keyPeakHeightSliderLabel = "TerrainTools.MoundMaker.Slider.PeakHeight";
+        private readonly string _keyPeakHeightSliderTip = "TerrainTools.MoundMaker.Slider.PeakHeight.Tooltip";
+        private readonly string _keyMaxChangeSliderLabel = "TerrainTools.MoundMaker.Slider.MaxChange";
+        private readonly string _keyMaxChangeSliderTip = "TerrainTools.MoundMaker.Slider.MaxChange.Tooltip";
 
-        private readonly string _keyRadialNoiseHeader = "TerrainTools.MoundMaker.Header.RadialNoise"; // "Radial Noise"
-        private readonly string _keyRadialScaleSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Scale"; // "Scale"
-        private readonly string _keyRadialFreqSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Frequency"; // "Frequency"
-        private readonly string _keyRadialDetailSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Detail"; // "Detail"
+        private readonly string _keyRadialNoiseHeader = "TerrainTools.MoundMaker.Header.RadialNoise";
+        private readonly string _keyRadialScaleSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Scale";
+        private readonly string _keyRadialScaleSliderTip = "TerrainTools.MoundMaker.Slider.Radial.Scale.Tooltip";
+        private readonly string _keyRadialFreqSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Frequency";
+        private readonly string _keyRadialFreqSliderTip = "TerrainTools.MoundMaker.Slider.Radial.Frequency.Tooltip";
+        private readonly string _keyRadialDetailSliderLabel = "TerrainTools.MoundMaker.Slider.Radial.Detail";
+        private readonly string _keyRadialDetailSliderTip = "TerrainTools.MoundMaker.Slider.Radial.Detail.Tooltip";
 
-        private readonly string _keyVerticalNoiseHeader = "TerrainTools.MoundMaker.Header.VerticalNoise"; // "Vertical Noise"
-        private readonly string _keyVerticalAmpSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Amplitude"; // Amplitude
-        private readonly string _keyVerticalFreqSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Frequency"; // Frequency
-        private readonly string _keyVerticalDetailSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Detail"; // Detail
+        private readonly string _keyVerticalNoiseHeader = "TerrainTools.MoundMaker.Header.VerticalNoise";
+        private readonly string _keyVerticalAmpSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Amplitude";
+        private readonly string _keyVerticalAmpSliderTip = "TerrainTools.MoundMaker.Slider.Vertical.Amplitude.Tooltip";
+        private readonly string _keyVerticalFreqSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Frequency";
+        private readonly string _keyVerticalFreqSliderTip = "TerrainTools.MoundMaker.Slider.Vertical.Frequency.Tooltip";
+        private readonly string _keyVerticalDetailSliderLabel = "TerrainTools.MoundMaker.Slider.Vertical.Detail";
+        private readonly string _keyVerticalDetailSliderTip = "TerrainTools.MoundMaker.Slider.Vertical.Detail.Tooltip";
 
-        private readonly string _keyRandomizeCheckboxLabel = "TerrainTools.MoundMaker.Checkbox.Randomize"; // Randomize
-        private readonly string _keySeedDisplayLabel = "TerrainTools.MoundMaker.Seed.Label"; // Seed
-        private readonly string _keyResetButtonLabel = "TerrainTools.Common.Button.Reset"; // Reset
+        private readonly string _keyRandomizeCheckboxLabel = "TerrainTools.MoundMaker.Checkbox.Randomize";
+        private readonly string _keySeedDisplayLabel = "TerrainTools.MoundMaker.Seed.Label";
+        private readonly string _keyResetButtonLabel = "TerrainTools.Common.Button.Reset";
 
         public MoundMakerToolPanel(TerrainToolPanelFactory toolPanelFactory, EventBus eventBus, MoundMakerTool tool, InputBindingDescriber inputBindingDescriber, ILoc loc)
         : base(eventBus, typeof(MoundMakerTool), loc)
@@ -107,6 +115,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _peakHeightSlider, ref _peakHeightSliderValue,
                     _loc.T(_keyPeakHeightSliderLabel) + ":",
+                    _keyPeakHeightSliderTip,
                     delegate
                     {
                         _peakHeightSlider.UpdateAsInt(_peakHeightSliderValue);
@@ -120,6 +129,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _maxAdjustSlider, ref _maxAdjustSliderValue,
                     _loc.T(_keyMaxChangeSliderLabel) + ":",
+                    _keyMaxChangeSliderTip,
                     delegate
                     {
                         _maxAdjustSlider.UpdateAsInt(_maxAdjustSliderValue);
@@ -137,6 +147,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _radialNoiseSlider, ref _radialNoiseSliderValue,
                     _loc.T(_keyRadialScaleSliderLabel) + ":",
+                    _keyRadialScaleSliderTip,
                     delegate
                     {
                         _radialNoiseSlider.UpdateAsPercent(_radialNoiseSliderValue);
@@ -161,6 +172,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _radialNoiseFreqSlider, ref _radialNoiseFreqSliderValue,
                     _loc.T(_keyRadialFreqSliderLabel) + ":",
+                    _keyRadialFreqSliderTip,
                     delegate
                     {
                         _radialNoiseFreqSlider.UpdateAsInt(_radialNoiseFreqSliderValue);
@@ -174,6 +186,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _radialNoiseOctavesSlider, ref _radialNoiseOctavesSliderValue,
                     _loc.T(_keyRadialDetailSliderLabel) + ":",
+                    _keyRadialDetailSliderTip,
                     delegate
                     {
                         _radialNoiseOctavesSlider.UpdateAsInt(_radialNoiseOctavesSliderValue);
@@ -190,6 +203,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _ampSlider, ref _ampSliderValue,
                     _loc.T(_keyVerticalAmpSliderLabel) + ":",
+                    _keyVerticalAmpSliderTip,
                     delegate
                     {
                         _ampSlider.Update(_ampSliderValue);
@@ -215,6 +229,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _freqSlider, ref _freqSliderValue,
                     _loc.T(_keyVerticalFreqSliderLabel) + ":",
+                    _keyVerticalFreqSliderTip,
                     delegate
                     {
                         _freqSlider.Update(_freqSliderValue);
@@ -228,6 +243,7 @@ namespace TerrainTools.MoundMaker
                 MakeParameterSlider(
                     ref _octavesSlider, ref _octavesSliderValue,
                     _loc.T(_keyVerticalDetailSliderLabel) + ":",
+                    _keyVerticalDetailSliderTip,
                     delegate
                     {
                         _octavesSlider.UpdateAsInt(_octavesSliderValue);
@@ -270,12 +286,12 @@ namespace TerrainTools.MoundMaker
         #endregion Build Tool Panel
 
         #region Support methods
-        private VisualElement MakeParameterSlider(ref Slider sliderRef, ref Label labelRef, string label, Action action, float min, float max, float initial)
+        private VisualElement MakeParameterSlider(ref Slider sliderRef, ref Label labelRef, string label, string tooltip, Action action, float min, float max, float initial)
         {
             VisualElement _sliderContainer = _elementFactory.MakeSlider(label, action, min, max, initial);
             sliderRef = _sliderContainer.Q("Slider") as Slider;
             labelRef = _sliderContainer.Q("SliderValue") as Label;
-
+            _elementFactory.RegisterTooltip(_sliderContainer, tooltip);
             return _sliderContainer;
         }
 

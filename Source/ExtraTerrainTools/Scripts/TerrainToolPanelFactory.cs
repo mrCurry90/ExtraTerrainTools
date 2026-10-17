@@ -4,6 +4,7 @@ using System.Linq;
 using Timberborn.CoreUI;
 using Timberborn.DropdownSystem;
 using Timberborn.SingletonSystem;
+using Timberborn.TooltipSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace TerrainTools
@@ -24,26 +25,17 @@ namespace TerrainTools
         // private readonly VisualElementLoader _loader;
         private readonly DropdownItemsSetter _dropdownItemsSetter;
         private readonly DropdownListDrawer _dropdownListDrawer;
-
-        // private static readonly string brushShapePath = "MapEditor/ToolPanel/BrushShapePanel";
-        // private static readonly string brushSizePath = "MapEditor/ToolPanel/BrushSizePanel";
-        // private static readonly string thumbnailPath = "MapEditor/ToolPanel/ThumbnailCapturingPanel";
-        // private static readonly string spawningPath = "MapEditor/ToolPanel/NaturalResourceSpawningBrushPanel";
-        // private static readonly string togglePath = "MapEditor/ToolPanel/ToolPanelToggle";
-        // private static readonly string newMapBoxPath = "Options/NewMapBox";
-        // private static readonly string dropdownPath = "Game/BatchControl/DropdownBatchControlRowItem";
-        // private static readonly string mapSelection = "Common/MapSelection";
-
+        private readonly ITooltipRegistrar _tooltipRegistrar;
 
         public TerrainToolPanelFactory(
-            // VisualElementLoader visualElementLoader,
             DropdownItemsSetter dropdownItemsSetter,
-            DropdownListDrawer dropdownListDrawer
+            DropdownListDrawer dropdownListDrawer,
+            ITooltipRegistrar tooltipRegistrar
         )
         {
-            // _loader = visualElementLoader;
             _dropdownItemsSetter = dropdownItemsSetter;
             _dropdownListDrawer = dropdownListDrawer;
+            _tooltipRegistrar = tooltipRegistrar;
         }
 
         public void Load()
@@ -100,6 +92,23 @@ namespace TerrainTools
             label.style.unityTextAlign = alignAnchor;
             return label;
         }
+
+        public Label MakeLabel(string text, string tooltip, TextAnchor alignAnchor, TextFormat format = TextFormat.None)
+        {
+            if (format != TextFormat.None)
+            {
+                if (format.HasFlag(TextFormat.Bold)) text = $"<b>{text}</b>";
+                if (format.HasFlag(TextFormat.Italic)) text = $"<i>{text}</i>";
+            }
+
+            var label = MakeLabel(text);
+            label.style.unityTextAlign = alignAnchor;
+
+            _tooltipRegistrar.RegisterLocalizable(label, tooltip);
+
+            return label;
+        }
+
         public TextField MakeTextField(Action<TextField> changeAction = null)
         {
             NineSliceTextField textField = new();
@@ -351,6 +360,11 @@ namespace TerrainTools
             return row;
         }
         #endregion
+
+        #region Tooltips
+        public void RegisterTooltip(VisualElement element, string locKey) => _tooltipRegistrar.RegisterLocalizable(element, locKey);
+        #endregion
+
 
         #region Private members
         private void SetElementLayout(VisualElement container, FlexDirection flexDirection, Align alignItems, Justify justifyContent)

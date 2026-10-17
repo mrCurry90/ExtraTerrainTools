@@ -1,12 +1,13 @@
 using UnityEngine;
 using Timberborn.Common;
 using Generator = TerrainTools.NoiseGenerator.NoiseGenerator;
+
 namespace TerrainTools.MoundMaker
 {
     public class Peak
     {
         private static readonly float TAU = 2 * Mathf.PI;
-        
+
         public Vector2Int Coordinate { get { return vertex.XY(); } }
         public int Height { get { return vertex.z; } }
         public int Base { get { return Radius * 2; } }
@@ -22,22 +23,22 @@ namespace TerrainTools.MoundMaker
         private Vector3[] radialEnds;
         private readonly float arcStep;
 
-        public Peak( Vector3Int vertex, int radius, int maxRadials = 64 )
+        public Peak(Vector3Int vertex, int radius, int maxRadials = 64)
         {
             this.vertex = vertex;
             Radius = radius;
             RadiusSqr = radius * radius;
 
-            Radials = Mathf.Min( 
-                Mathf.RoundToInt(TAU * radius), 
-                maxRadials 
+            Radials = Mathf.Min(
+                Mathf.RoundToInt(TAU * radius),
+                maxRadials
             );
             arcStep = TAU / Radials;
 
             ComputeCone();
         }
 
-        public Peak(Vector3Int vertex, int radius, string seed, float radialNoiseScaleMin = 0.75f, float radialNoiseScaleMax = 1, int radialNoiseDetail = 3, float radialNoiseFrequency = 2, int maxRadials = 64 )
+        public Peak(Vector3Int vertex, int radius, string seed, float radialNoiseScaleMin = 0.75f, float radialNoiseScaleMax = 1, int radialNoiseDetail = 3, float radialNoiseFrequency = 2, int maxRadials = 64)
         {
             this.vertex = vertex;
             Radius = radius;
@@ -47,9 +48,9 @@ namespace TerrainTools.MoundMaker
             RadiusFreq = radialNoiseFrequency;
             RadiusOctaves = radialNoiseDetail;
 
-            Radials = Mathf.Min( 
-                Mathf.RoundToInt(TAU * radius), 
-                maxRadials 
+            Radials = Mathf.Min(
+                Mathf.RoundToInt(TAU * radius),
+                maxRadials
             );
             arcStep = TAU / Radials;
 
@@ -66,7 +67,7 @@ namespace TerrainTools.MoundMaker
                 angle = arcStep * i;
                 x = Mathf.Cos(angle) * Radius;
                 y = Mathf.Sin(angle) * Radius;
-                radialEnds[i] = new( x, y, -vertex.z );
+                radialEnds[i] = new(x, y, -vertex.z);
             }
         }
 
@@ -74,36 +75,27 @@ namespace TerrainTools.MoundMaker
         {
             Randomizer rng = seed == null ? new() : new(seed);
             radialEnds = new Vector3[Radials];
-            
-            int radialOffset = rng.GetInt(Radials);
-            float freq = RadiusFreq;
 
-            Vector2 coord = new(0, rng.GetFloat());
-            Vector2 period = new(freq, freq);
-            float   angle, x, y, n, r,
-                    rMin = RadiusMin,
-                    rDev = 1f - rMin;
+            Vector2 origin = new(rng.GetFloat() * 10f, rng.GetFloat() * 10f);
+            float ringRadius = 1f / TAU;
+            float rDev = RadiusMax - RadiusMin;
 
-            for (int i = 0, j; i < Radials; i++)
+            for (int i = 0; i < Radials; i++)
             {
-                j = (radialOffset + i) % Radials;
-                coord.x = freq * j / Radials;
-                // n = ( Generator.Noise(coord, period) + 1 ) / 2;
-                n = Mathf.Clamp01( (Generator.FBM(coord, period, 0, RadiusOctaves, 0.5f, freq) + 1) / 2 );
-                r = rMin + rDev * n;
-                angle = arcStep * i;
-                x = Mathf.Cos(angle) * r * Radius;
-                y = Mathf.Sin(angle) * r * Radius;
-                radialEnds[i] = new( x, y, -vertex.z );
+                float angle = arcStep * i;
+                Vector2 dir = new(Mathf.Cos(angle), Mathf.Sin(angle));
+                float n = Mathf.Clamp01((Generator.FBM(origin + dir * ringRadius, RadiusOctaves, 0.5f, RadiusFreq) + 1) / 2);
+                float r = RadiusMin + rDev * n;
+                radialEnds[i] = new(dir.x * r * Radius, dir.y * r * Radius, -vertex.z);
             }
-        }    
+        }
 
         /// <summary>
         /// Project point onto slope of peak.
         /// </summary>
         /// <param name="point">Point on XY-plane in world space</param>
         /// <returns>Point on surface</returns>
-        public Vector3 PointOnSlope( Vector2 point )
+        public Vector3 PointOnSlope(Vector2 point)
         {
             Vector3 local = (point - vertex.XY()).XYZ();
 
@@ -111,14 +103,14 @@ namespace TerrainTools.MoundMaker
 
             float angle = (Mathf.Atan2(local.y, local.x) + TAU) % TAU;
             float steps = angle / arcStep;
-            
+
             int index0 = Mathf.FloorToInt(steps);
             float subStep = steps % 1;
 
             Vector3 r0 = radialEnds[index0];
 
             // Utils.Log("r0: {0}", r0);
-            if( subStep == 0 ) 
+            if (subStep == 0)
             {
                 // Utils.Log("Projected: {0}", local.DropOnto(r0));
                 // We hit a radial

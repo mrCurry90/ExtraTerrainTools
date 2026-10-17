@@ -1,0 +1,15 @@
+{
+  "KeyBindingSpec": {
+    "Id": "ExtraTerrainTools.SelectionAdjustDown",
+    "GroupId": "TerrainTools",
+    "LocKey": "TerrainTools.Keybinding.Selection.AdjustDown",
+    "Order": 185,
+    "AllowOtherModifiers": true,
+    "DevModeOnly": false
+  },
+  "PrimaryInputBindingSpec": {
+    "Path": "/Keyboard/pageDown",
+    "InputModifiers": "None",
+    "Unchangeable": false
+  }
+}

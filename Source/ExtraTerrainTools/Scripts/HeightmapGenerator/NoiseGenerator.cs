@@ -258,6 +258,18 @@ namespace TerrainTools.NoiseGenerator
 			return value;
 		}
 
+		public static float FBM(Vector2 coord, int octaves = 6, float amplitude = 0.5f, float frequency = 3)
+		{
+			float amp = amplitude, freq = frequency, value = 0;
+			for (int i = 0; i < octaves; i++)
+			{
+				value += amp * noise.snoise(new float2(coord.x, coord.y) * freq);
+				amp *= 0.5f;
+				freq *= 2;
+			}
+			return value;
+		}
+
 		// Simple wrapper to convert input from Unity.Mathematics.float2 to Vector2
 		public static float Noise(Vector2 coord, Vector2 period, float rotation = 0)
 		{

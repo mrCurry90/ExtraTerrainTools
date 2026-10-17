@@ -70,19 +70,27 @@ TerrainTools.Smoothing.Shape.Circle,Circle,Option for a circular shaped brush
 TerrainTools.MoundMaker.Tool.Title,Mound Maker,Title fo the tool
 TerrainTools.MoundMaker.Hint.CycleSeed,{0} = Cycle seed,"Hint text for keybind to change the seed, {0} is replaced by actual keybind"
 TerrainTools.MoundMaker.Hint.DigMode,{0} (Hold) = Dig Mode,"Hint text for keybind to enter digging mode, when held, {0} is replaced by actual keybind"
-TerrainTools.MoundMaker.Header.Shape,Shape,Header label for Shape category of sliders
-TerrainTools.MoundMaker.Slider.PeakHeight,Peak height,Label for slider controlling the height of the peak
-TerrainTools.MoundMaker.Slider.MaxChange,Max change,Label for slider controlling the maximum adjustment allowed
-TerrainTools.MoundMaker.Header.RadialNoise,Radial Noise,Header label for Radial Noise category of sliders
-TerrainTools.MoundMaker.Slider.Radial.Scale,Scale,"Label for slider controlling radial noise scale, value in percentage"
-TerrainTools.MoundMaker.Slider.Radial.Frequency,Frequency,Label for slider controlling radial noise frequency
+TerrainTools.MoundMaker.Header.Shape,Mountain,Header label for Shape category of sliders
+TerrainTools.MoundMaker.Slider.PeakHeight,Height,Label for slider controlling the height of the peak
+TerrainTools.MoundMaker.Slider.MaxChange,Limit,Label for slider controlling the maximum adjustment allowed
+TerrainTools.MoundMaker.Header.RadialNoise,Outline,Header label for Radial Noise category of sliders
+TerrainTools.MoundMaker.Slider.Radial.Scale,Erosion,"Label for slider controlling radial noise scale, value in percentage"
+TerrainTools.MoundMaker.Slider.Radial.Frequency,Bays,Label for slider controlling radial noise frequency
 TerrainTools.MoundMaker.Slider.Radial.Detail,Detail,Label for slider controlling radial noise level of detail
-TerrainTools.MoundMaker.Header.VerticalNoise,Vertical Noise,Header label for Vertical Noise category of sliders
-TerrainTools.MoundMaker.Slider.Vertical.Amplitude,Amplitude,"Label for slider controlling vertical noise amplitude, value in distance units"
-TerrainTools.MoundMaker.Slider.Vertical.Frequency,Frequency,Label for slider controlling vertical noise frequency
+TerrainTools.MoundMaker.Header.VerticalNoise,Surface,Header label for Vertical Noise category of sliders
+TerrainTools.MoundMaker.Slider.Vertical.Amplitude,Relief,"Label for slider controlling vertical noise amplitude, value in distance units"
+TerrainTools.MoundMaker.Slider.Vertical.Frequency,Crags,Label for slider controlling vertical noise frequency
 TerrainTools.MoundMaker.Slider.Vertical.Detail,Detail,Label for slider controlling vertical noise level of detail
 TerrainTools.MoundMaker.Checkbox.Randomize,Randomize,Label for checkbox controlling auto-randomization of the seed
 TerrainTools.MoundMaker.Seed.Label,Seed,Label for seed display
+TerrainTools.MoundMaker.Slider.PeakHeight.Tooltip,How tall the mountain rises above the point you click,Tooltip Peak Height
+TerrainTools.MoundMaker.Slider.MaxChange.Tooltip,No tile is adjusted more than this many blocks from its current height,Terrain is never raised more than this many blocks.
+TerrainTools.MoundMaker.Slider.Radial.Scale.Tooltip,"How uneven the footprint is; low ≈ a rounder base, high ≈ a wild and irregular shape",Tooltip Radial Noise Scale
+TerrainTools.MoundMaker.Slider.Radial.Frequency.Tooltip,"Number of cuts into the edge; few ≈ sweeping curves, many ≈ a notched outline",Tooltip Radial Noise Freq
+TerrainTools.MoundMaker.Slider.Radial.Detail.Tooltip,"Adds finer details to the edge; low ≈ smooth, high ≈ many small imperfections",Tooltip Radial Noise Octaves
+TerrainTools.MoundMaker.Slider.Vertical.Amplitude.Tooltip,"How tall the bumps and dips on the slopes are; low ≈ smooth sides, high ≈ bumpy sides, can overpower Height and Outline",Tooltip Vertical Noise Ampl
+TerrainTools.MoundMaker.Slider.Vertical.Frequency.Tooltip,"How close surface features are; low ≈ rolling hills, high ≈ sharp and craggy terrain",Tooltip Vertical Noise Freq
+TerrainTools.MoundMaker.Slider.Vertical.Detail.Tooltip,"Adds finer detail to surface features, low ≈ smooth, high ≈ many small imperfections",Tooltip Vertical Noise Detail
 TerrainTools.CloneTool.Title,Selection Editor,Title of the tool
 TerrainTools.CloneTool.Description,"Copy, Cut, Rotate, Flip and Paste","Description of the tool. The tool lets the user select, copy/cut, rotate and flip and paste in new position"
 TerrainTools.CloneTool.InputGroup.Select,Select area,Label for input group describing selection action
